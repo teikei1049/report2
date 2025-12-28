@@ -358,51 +358,44 @@
     </svg>
   `;
 
+  let state = null;
 
-let state = null;
-const DEFAULT_SRC = "./datalatest.json";
+  // 共有用：?src= でJSONを読めるようにする（無ければ localStorage）
+  const qs = new URLSearchParams(location.search);
+  const defaultSrc = "./datalatest.json";
+  const src = qs.get("src") || "";
 
-function propagateSrcToNav(){
-  const qs2 = new URLSearchParams(location.search);
-  if(!qs2.has("src")) return;
-  const src2 = qs2.get("src");
-  const v2 = qs2.get("v");
-  document.querySelectorAll(".nav a.tab").forEach(a=>{
-    const href = a.getAttribute("href");
-    if(!href) return;
-    const u = new URL(href, location.href);
-    u.searchParams.set("src", src2);
-    if(v2) u.searchParams.set("v", v2);
-    a.href = u.toString();
-  });
-}
-
-async function loadInitialState(){
-  const qs2 = new URLSearchParams(location.search);
-  const src2 = qs2.get("src");
-  const hasLocal = (typeof STORAGE_KEY !== "undefined") && localStorage.getItem(STORAGE_KEY);
-  const target = src2 || (hasLocal ? null : DEFAULT_SRC);
-
-  let s;
-  if(target){
-    try{
-      const res = await fetch(target, { cache: "no-store" });
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const raw = await res.json();
-      s = deepMerge(DEFAULT_STATE, raw);
-    }catch(err){
-      console.error(err);
-      s = loadState();
-    }
-  }else{
-    s = loadState();
+  function applySrcToTabs(){
+    if(!src) return;
+    document.querySelectorAll(".nav a.tab").forEach(a=>{
+      const href = a.getAttribute("href");
+      if(!href) return;
+      const u = new URL(href, location.href);
+      u.searchParams.set("src", src);
+      a.setAttribute("href", u.pathname + "?" + u.searchParams.toString());
+    });
   }
 
-  s.meta = s.meta || {};
-  s.archive = s.archive || {}; // { "YYYY-MM": { partners, planned, updatedAt } }
-  return s;
-}
-
+  async function loadFromSrcOrLocal(){
+    if(!src) return loadState();
+    try{
+      const res = await fetch(src, { cache: "no-store" });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      const base = deepMerge(DEFAULT_STATE, raw);
+      const localRaw = localStorage.getItem(STORAGE_KEY);
+      if(localRaw){
+        const localState = loadState();
+        const merged = deepMerge(base, localState);
+        merged.partners = (Array.isArray(localState.partners) && localState.partners.length) ? localState.partners : base.partners;
+        merged.planned  = (Array.isArray(localState.planned)  && localState.planned.length)  ? localState.planned  : base.planned;
+        return merged;
+      }
+      return base;
+    }catch(e){
+      return loadState();
+    }
+  }
 
   function setSaveStatus(s){ $("saveStatus").textContent = s; }
   function markDirty(){ setSaveStatus("編集中…"); }
@@ -676,8 +669,10 @@ async function loadInitialState(){
   }
 
   window.addEventListener("load", async ()=>{
-    propagateSrcToNav();
-    state = await loadInitialState();
+    state = await loadFromSrcOrLocal();
+    state.meta = state.meta || {};
+    state.archive = state.archive || {};
+    applySrcToTabs();
     ensureMonthData();
     render();
     setSaveStatus("保存済み");

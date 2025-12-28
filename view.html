@@ -180,20 +180,18 @@
   const defaultSrc = "./datalatest.json";
   let src = qs.get("src") || defaultSrc;
 
-function propagateSrcToNav(){
-  const qs2 = new URLSearchParams(location.search);
-  if(!qs2.has("src")) return;
-  const src2 = qs2.get("src");
-  const v2 = qs2.get("v");
-  document.querySelectorAll(".nav a.tab").forEach(a=>{
-    const href = a.getAttribute("href");
-    if(!href) return;
-    const u = new URL(href, location.href);
-    u.searchParams.set("src", src2);
-    if(v2) u.searchParams.set("v", v2);
-    a.href = u.toString();
-  });
-}
+  // 共有用：他ページへ遷移しても src を引き継ぐ
+  function applySrcToTabs(){
+    document.querySelectorAll(".nav a.tab").forEach(a=>{
+      const href = a.getAttribute("href");
+      if(!href) return;
+      const u = new URL(href, location.href);
+      u.searchParams.set("src", src);
+      a.setAttribute("href", u.pathname + "?" + u.searchParams.toString());
+    });
+  }
+  applySrcToTabs();
+
 
   async function loadFromSrc(){
     try{
@@ -201,7 +199,16 @@ function propagateSrcToNav(){
       const res = await fetch(src, { cache: "no-store" });
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const raw = await res.json();
-      return deepMerge(DEFAULT_STATE, raw);
+      const base = deepMerge(DEFAULT_STATE, raw);
+      const localRaw = localStorage.getItem(STORAGE_KEY);
+      if(localRaw){
+        const localState = loadState();
+        const merged = deepMerge(base, localState);
+        merged.partners = (Array.isArray(localState.partners) && localState.partners.length) ? localState.partners : base.partners;
+        merged.planned  = (Array.isArray(localState.planned)  && localState.planned.length)  ? localState.planned  : base.planned;
+        return merged;
+      }
+      return base;
     }catch(err){
       $("source").textContent = "localStorage（読込失敗）";
       return loadState();
@@ -294,8 +301,6 @@ function propagateSrcToNav(){
     state = await loadFromSrc();
     render(state);
   }
-
-  propagateSrcToNav();
 
   $("btnReload").addEventListener("click", boot);
   boot();

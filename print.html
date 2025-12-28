@@ -145,27 +145,32 @@
   const $ = (id)=>document.getElementById(id);
   const nf = new Intl.NumberFormat("ja-JP");
   let state = null;
-  const DEFAULT_SRC = "./datalatest.json";
-async function loadInitialState(){
-  const qs = new URLSearchParams(location.search);
-  const src = qs.get("src");
-  const hasLocal = (typeof STORAGE_KEY !== "undefined") && localStorage.getItem(STORAGE_KEY);
-  const target = src || (hasLocal ? null : DEFAULT_SRC);
 
-  if(target){
+  // 共有用：?src= があればJSONを読む（無ければ localStorage）
+  const qs = new URLSearchParams(location.search);
+  const defaultSrc = "./datalatest.json";
+  const src = qs.get("src") || "";
+
+  async function loadFromSrcOrLocal(){
+    if(!src) return loadState();
     try{
-      const res = await fetch(target, { cache: "no-store" });
+      const res = await fetch(src, { cache: "no-store" });
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const raw = await res.json();
-      return deepMerge(DEFAULT_STATE, raw);
-    }catch(err){
-      console.error(err);
+      const base = deepMerge(DEFAULT_STATE, raw);
+      const localRaw = localStorage.getItem(STORAGE_KEY);
+      if(localRaw){
+        const localState = loadState();
+        const merged = deepMerge(base, localState);
+        merged.partners = (Array.isArray(localState.partners) && localState.partners.length) ? localState.partners : base.partners;
+        merged.planned  = (Array.isArray(localState.planned)  && localState.planned.length)  ? localState.planned  : base.planned;
+        return merged;
+      }
+      return base;
+    }catch(e){
       return loadState();
     }
   }
-  return loadState();
-}
-
 
 
   function computeCPA(cost, denom){
@@ -173,88 +178,89 @@ async function loadInitialState(){
     return denom > 0 ? (cost/denom) : 0;
   }
 
-  async function boot(){
-    state = await loadInitialState();
 
+  async function boot(){
+    state = await loadFromSrcOrLocal();
 
     // header
-    $("periodLabel").textContent = derivePeriodLabel(state.meta.periodStart);
-    $("asof").textContent = fmtJPDate(state.meta.periodEnd);
+  $("periodLabel").textContent = derivePeriodLabel(state.meta.periodStart);
+  $("asof").textContent = fmtJPDate(state.meta.periodEnd);
 
-    // KPI
-    const { now } = computeKPI(state);
-    $("k_ty").textContent = fmt1(now.ty);
-    $("k_cvr").textContent = fmt1(now.cvr);
-    $("k_ccr").textContent = fmt1(now.ccr);
-    $("k_cy").textContent = fmt1(now.cy);
+  // KPI
+  const { now } = computeKPI(state);
+  $("k_ty").textContent = fmt1(now.ty);
+  $("k_cvr").textContent = fmt1(now.cvr);
+  $("k_ccr").textContent = fmt1(now.ccr);
+  $("k_cy").textContent = fmt1(now.cy);
 
-    // numbers
-    const c = state.perf || {};
-    $("tv").textContent = nf.format(clamp0(c.totalVisit));
-    $("tc").textContent = nf.format(clamp0(c.totalContract));
-    $("cv").textContent = nf.format(clamp0(c.corpVisit));
-    $("cc").textContent = nf.format(clamp0(c.corpContract));
-    $("rc").textContent = nf.format(clamp0(c.referralCards));
+  // numbers
+  const c = state.perf || {};
+  $("tv").textContent = nf.format(clamp0(c.totalVisit));
+  $("tc").textContent = nf.format(clamp0(c.totalContract));
+  $("cv").textContent = nf.format(clamp0(c.corpVisit));
+  $("cc").textContent = nf.format(clamp0(c.corpContract));
+  $("rc").textContent = nf.format(clamp0(c.referralCards));
 
-    $("pc").textContent = nf.format(clamp0(state.counts && state.counts.partnerCompanies));
-    $("tg").textContent = nf.format(clamp0(state.counts && state.counts.targetCompanies));
+  $("pc").textContent = nf.format(clamp0(state.counts && state.counts.partnerCompanies));
+  $("tg").textContent = nf.format(clamp0(state.counts && state.counts.targetCompanies));
 
-    const topics = (state.topics || "").trim();
-    $("topics").textContent = topics ? topics : "—";
+  const topics = (state.topics || "").trim();
+  $("topics").textContent = topics ? topics : "—";
 
-    // Page2 summary
-    $("s_cv").textContent = nf.format(clamp0(c.corpVisit));
-    $("s_cc").textContent = nf.format(clamp0(c.corpContract));
-    const totalCost = (state.partners || []).reduce((s,p)=> s + clamp0(p && p.cost), 0);
-    const totalVisit = (state.partners || []).reduce((s,p)=> s + clamp0(p && p.visit), 0);
-    $("s_cost").textContent = nf.format(totalCost);
-    $("s_cpa").textContent = computeCPA(totalCost, totalVisit).toFixed(1);
+  // Page2 summary
+  $("s_cv").textContent = nf.format(clamp0(c.corpVisit));
+  $("s_cc").textContent = nf.format(clamp0(c.corpContract));
+  const totalCost = (state.partners || []).reduce((s,p)=> s + clamp0(p && p.cost), 0);
+  const totalVisit = (state.partners || []).reduce((s,p)=> s + clamp0(p && p.visit), 0);
+  $("s_cost").textContent = nf.format(totalCost);
+  $("s_cpa").textContent = computeCPA(totalCost, totalVisit).toFixed(1);
 
-    // tables
-    const tb = $("tblPartners");
-    tb.innerHTML = "";
-    (state.partners || []).forEach(p=>{
-      p = p || {};
-      const hasAny =
-        ["name","property","pr","benefit","note"].some(k=> String(p[k]||"").trim()) ||
-        [p.visit,p.first,p.apply,p.contract,p.cost,p.fee].some(v=> clamp0(v)>0);
-      if(!hasAny) return;
+  // tables
+  const tb = $("tblPartners");
+  tb.innerHTML = "";
+  (state.partners || []).forEach(p=>{
+    p = p || {};
+    const hasAny =
+      ["name","property","pr","benefit","note"].some(k=> String(p[k]||"").trim()) ||
+      [p.visit,p.first,p.apply,p.contract,p.cost,p.fee].some(v=> clamp0(v)>0);
+    if(!hasAny) return;
 
-      const tr = document.createElement("tr");
-      const td = (t)=>{ const x=document.createElement("td"); x.textContent = t; return x; };
+    const tr = document.createElement("tr");
+    const td = (t)=>{ const x=document.createElement("td"); x.textContent = t; return x; };
 
-      tr.appendChild(td(String(p.name||"").trim()));
-      tr.appendChild(td(String(p.property||"").trim()));
-      tr.appendChild(td(String(clamp0(p.visit))));
-      tr.appendChild(td(String(clamp0(p.first))));
-      tr.appendChild(td(String(clamp0(p.apply))));
-      tr.appendChild(td(String(clamp0(p.contract))));
-      tr.appendChild(td(String(p.pr||"").trim()));
-      tr.appendChild(td(String(clamp0(p.cost))));
-      tr.appendChild(td(String(p.benefit||"").trim()));
-      tr.appendChild(td(String(clamp0(p.fee))));
-      tr.appendChild(td(String(p.note||"").trim()));
-      tb.appendChild(tr);
-    });
+    tr.appendChild(td(String(p.name||"").trim()));
+    tr.appendChild(td(String(p.property||"").trim()));
+    tr.appendChild(td(String(clamp0(p.visit))));
+    tr.appendChild(td(String(clamp0(p.first))));
+    tr.appendChild(td(String(clamp0(p.apply))));
+    tr.appendChild(td(String(clamp0(p.contract))));
+    tr.appendChild(td(String(p.pr||"").trim()));
+    tr.appendChild(td(String(clamp0(p.cost))));
+    tr.appendChild(td(String(p.benefit||"").trim()));
+    tr.appendChild(td(String(clamp0(p.fee))));
+    tr.appendChild(td(String(p.note||"").trim()));
+    tb.appendChild(tr);
+  });
 
-    const tp = $("tblPlanned");
-    tp.innerHTML = "";
-    (state.planned || []).forEach(p=>{
-      p = p || {};
-      const hasAny = ["name","companySize","proposal","status","nextAction","schedule"].some(k=> String(p[k]||"").trim());
-      if(!hasAny) return;
+  const tp = $("tblPlanned");
+  tp.innerHTML = "";
+  (state.planned || []).forEach(p=>{
+    p = p || {};
+    const hasAny = ["name","companySize","proposal","status","nextAction","schedule"].some(k=> String(p[k]||"").trim());
+    if(!hasAny) return;
 
-      const tr = document.createElement("tr");
-      const td = (t)=>{ const x=document.createElement("td"); x.textContent = t; return x; };
+    const tr = document.createElement("tr");
+    const td = (t)=>{ const x=document.createElement("td"); x.textContent = t; return x; };
 
-      tr.appendChild(td(String(p.name||"").trim()));
-      tr.appendChild(td(String(p.companySize||"").trim()));
-      tr.appendChild(td(String(p.proposal||"").trim()));
-      tr.appendChild(td(String(p.status||"").trim()));
-      tr.appendChild(td(String(p.nextAction||"").trim()));
-      tr.appendChild(td(String(p.schedule||"").trim()));
-      tp.appendChild(tr);
-    });
+    tr.appendChild(td(String(p.name||"").trim()));
+    tr.appendChild(td(String(p.companySize||"").trim()));
+    tr.appendChild(td(String(p.proposal||"").trim()));
+    tr.appendChild(td(String(p.status||"").trim()));
+    tr.appendChild(td(String(p.nextAction||"").trim()));
+    tr.appendChild(td(String(p.schedule||"").trim()));
+    tp.appendChild(tr);
+  });
+
   }
   boot();
 </script>

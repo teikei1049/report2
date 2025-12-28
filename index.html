@@ -1739,7 +1739,14 @@
         const res = await fetch(src, { cache: "no-store" });
         if(!res.ok) throw new Error("fetch failed: " + res.status);
         const obj = await res.json();
-        state = mergeStateFromObject(obj);
+        const localRaw = localStorage.getItem(STORAGE_KEY);
+        if(localRaw){
+          // すでにローカル編集がある場合は、それを優先して「行き来で戻る」を防ぐ
+          state = loadState();
+        }else{
+          // 初回（ローカル未保存）だけ src(JSON) を表示
+          state = mergeStateFromObject(obj);
+        }
 
         // タブ遷移でも src を引き継ぐ
         document.querySelectorAll(".nav a.tab").forEach(a=>{
