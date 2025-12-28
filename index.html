@@ -1114,37 +1114,9 @@
     }
   }
 
-  // 共有用: ?src= のJSONから状態を作る（indexでも数字付きで共有するため）
-  function mergeStateFromObject(obj){
-    const s = clone(DEFAULT_STATE);
-    const out = {
-      ...s,
-      ...(obj||{}),
-      meta: { ...s.meta, ...((obj&&obj.meta)||{}) },
-      counts: { ...s.counts, ...((obj&&obj.counts)||{}) },
-      perf: { ...s.perf, ...((obj&&obj.perf)||{}) },
-      lastYear: { ...s.lastYear, ...((obj&&obj.lastYear)||{}) },
-      nextMonthPast: { ...s.nextMonthPast, ...((obj&&obj.nextMonthPast)||{}) },
-      nextTarget: { ...s.nextTarget, ...((obj&&obj.nextTarget)||{}) },
-      partners: (obj && Array.isArray(obj.partners) && obj.partners.length) ? obj.partners : clone(s.partners),
-      topics: (obj && typeof obj.topics === "string") ? obj.topics : ""
-    };
-    out.partners = out.partners.map(p => ({
-      name: p?.name ?? "",
-      property: p?.property ?? "",
-      visit: Number(p?.visit ?? 0) || 0,
-      contract: Number(p?.contract ?? 0) || 0,
-      first: Number(p?.first ?? 0) || 0,
-      apply: Number(p?.apply ?? 0) || 0
-    }));
-    return out;
-  }
+  let state = loadState();
 
-
-
-  let state = clone(DEFAULT_STATE);
-
-// ===================== Utilities =====================
+  // ===================== Utilities =====================
   const $ = (id) => document.getElementById(id);
   const nfInt = new Intl.NumberFormat("ja-JP");
 
@@ -1690,12 +1662,37 @@
   }
 
   // ===================== Events =====================
+  // ★page2側の累計計算に使うため、月報(index)の「法人来場/法人契約」を月別にスナップショット保存
+  function ymFromIsoStart(isoStart){
+    const d = isoStart ? new Date(isoStart) : new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    return `${y}-${m}`;
+  }
+  function persistCorpToArchive(){
+    const ym = ymFromIsoStart(state && state.meta ? state.meta.periodStart : "");
+    state.archive = state.archive || {};
+    const arc = state.archive[ym] || {};
+    arc.perf = arc.perf || {};
+    arc.perf.corpVisit = clamp0(state && state.perf ? state.perf.corpVisit : 0);
+    arc.perf.corpContract = clamp0(state && state.perf ? state.perf.corpContract : 0);
+    arc.updatedAt = new Date().toISOString();
+    state.archive[ym] = arc;
+  }
+
   function attachEventsOnce(){
-    const onAnyInput = () => {
+    const onAnyInput = (e) => {
       setSaveStatus("編集中…");
       readInputsToState();
       recalcPeriodsUI();
       recalcAll();
+
+      // ★法人来場/法人契約が変更されたときだけ、月別スナップショットを更新
+      const id = e && e.target ? e.target.id : "";
+      if(id === "v_corpVisit" || id === "v_corpContract"){
+        persistCorpToArchive();
+      }
+
       saveState();
     };
 
@@ -1722,58 +1719,18 @@
 
     $("btnPrint").addEventListener("click", ()=>{
       // 印刷用ページへ（別タブ）
-      const src = new URLSearchParams(location.search).get("src");
-      const u = new URL("./print.html", location.href);
-      if(src) u.searchParams.set("src", src);
-      const w = window.open(u.toString(), "_blank");
+      const w = window.open("./print.html", "_blank");
       if(w) w.opener = null;
     });
   }
 
   // ===================== Boot =====================
-  async function boot(){
-    const src = new URLSearchParams(location.search).get("src");
-
-    if(src){
-      try{
-        const res = await fetch(src, { cache: "no-store" });
-        if(!res.ok) throw new Error("fetch failed: " + res.status);
-        const obj = await res.json();
-        const localRaw = localStorage.getItem(STORAGE_KEY);
-        if(localRaw){
-          // すでにローカル編集がある場合は、それを優先して「行き来で戻る」を防ぐ
-          state = loadState();
-        }else{
-          // 初回（ローカル未保存）だけ src(JSON) を表示
-          state = mergeStateFromObject(obj);
-        }
-
-        // タブ遷移でも src を引き継ぐ
-        document.querySelectorAll(".nav a.tab").forEach(a=>{
-          const href = a.getAttribute("href");
-          if(!href) return;
-          try{
-            const u = new URL(href, location.href);
-            u.searchParams.set("src", src);
-            a.href = u.toString();
-          }catch(e){}
-        });
-      }catch(e){
-        console.warn("[index] src load failed. fallback to localStorage.", e);
-        state = loadState();
-      }
-    }else{
-      state = loadState();
-    }
-
-    initCharts();
-    setUIFromState();
-    renderPartners();
-    recalcAll();
-    attachEventsOnce();
-    setSaveStatus("保存済み");
-  }
-  boot();
+  initCharts();
+  setUIFromState();
+  renderPartners();
+  recalcAll();
+  attachEventsOnce();
+  setSaveStatus("保存済み");
 })();
 </script>
 </body>

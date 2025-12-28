@@ -253,8 +253,8 @@
       <div class="summaryBox month">
         <div class="cap">当月サマリー</div>
         <div class="kpiGrid">
-          <div class="mini"><div class="t">法人来場（提携合計）</div><div class="v" id="s_cv">0</div></div>
-          <div class="mini"><div class="t">法人契約（提携合計）</div><div class="v" id="s_cc">0</div></div>
+          <div class="mini"><div class="t">法人来場（月報入力）</div><div class="v" id="s_cv">0</div></div>
+          <div class="mini"><div class="t">法人契約（月報入力）</div><div class="v" id="s_cc">0</div></div>
           <div class="mini"><div class="t">PR費用 合計</div><div class="v" id="s_cost">0</div></div>
           <div class="mini"><div class="t">来場CPA（合計）</div><div class="v" id="s_cpa">0.0</div></div>
           <div class="mini"><div class="t">契約単価（合計）</div><div class="v" id="s_cpp">0.0</div></div>
@@ -358,44 +358,9 @@
     </svg>
   `;
 
-  let state = null;
-
-  // 共有用：?src= でJSONを読めるようにする（無ければ localStorage）
-  const qs = new URLSearchParams(location.search);
-  const defaultSrc = "./datalatest.json";
-  const src = qs.get("src") || "";
-
-  function applySrcToTabs(){
-    if(!src) return;
-    document.querySelectorAll(".nav a.tab").forEach(a=>{
-      const href = a.getAttribute("href");
-      if(!href) return;
-      const u = new URL(href, location.href);
-      u.searchParams.set("src", src);
-      a.setAttribute("href", u.pathname + "?" + u.searchParams.toString());
-    });
-  }
-
-  async function loadFromSrcOrLocal(){
-    if(!src) return loadState();
-    try{
-      const res = await fetch(src, { cache: "no-store" });
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const raw = await res.json();
-      const base = deepMerge(DEFAULT_STATE, raw);
-      const localRaw = localStorage.getItem(STORAGE_KEY);
-      if(localRaw){
-        const localState = loadState();
-        const merged = deepMerge(base, localState);
-        merged.partners = (Array.isArray(localState.partners) && localState.partners.length) ? localState.partners : base.partners;
-        merged.planned  = (Array.isArray(localState.planned)  && localState.planned.length)  ? localState.planned  : base.planned;
-        return merged;
-      }
-      return base;
-    }catch(e){
-      return loadState();
-    }
-  }
+  let state = loadState();
+  state.meta = state.meta || {};
+  state.archive = state.archive || {}; // { "YYYY-MM": { partners, planned, updatedAt } }
 
   function setSaveStatus(s){ $("saveStatus").textContent = s; }
   function markDirty(){ setSaveStatus("編集中…"); }
@@ -446,9 +411,30 @@
     if(arc && (arc.partners || arc.planned)){
       state.partners = Array.isArray(arc.partners) ? arc.partners : [defaultPartner()];
       state.planned  = Array.isArray(arc.planned)  ? arc.planned  : [defaultPlanned()];
+
+      // ★月報(index)で入力した「法人来場/法人契約」を、この月の値として読み込み
+      if(arc.perf){
+        state.perf = state.perf || {};
+        if("corpVisit" in arc.perf)    state.perf.corpVisit = clamp0(arc.perf.corpVisit);
+        if("corpContract" in arc.perf) state.perf.corpContract = clamp0(arc.perf.corpContract);
+      }
     }else{
-      if(!Array.isArray(state.partners) || state.partners.length===0) state.partners=[defaultPartner()];
+      // 新しい月（archive未作成）の初期化：
+      // 直前に表示していた提携リストの「企業名/物件/PR」だけ引き継ぎ、数値はゼロで開始
+      const basePartners = Array.isArray(state.partners) ? state.partners : [];
+      state.partners = basePartners.map(p=>{
+        const row = defaultPartner();
+        row.name     = (p && p.name) ? String(p.name) : "";
+        row.property = (p && p.property) ? String(p.property) : "";
+        row.pr       = (p && p.pr) ? String(p.pr) : "";
+        row.note     = (p && p.note) ? String(p.note) : "";
+        return row;
+      });
+      if(state.partners.length===0) state.partners=[defaultPartner()];
+
+      // 予定は従来どおり引き継ぎ（空なら1行）
       if(!Array.isArray(state.planned)  || state.planned.length===0)  state.planned=[defaultPlanned()];
+
       persistMonth();
     }
 
@@ -462,6 +448,13 @@
     state.archive[currentYM] = {
       partners: clone(state.partners || []),
       planned:  clone(state.planned  || []),
+
+      // ★月報(index)で入力した「法人来場/法人契約」も月別に保存（累計計算に使う）
+      perf: {
+        corpVisit: clamp0(state.perf && state.perf.corpVisit),
+        corpContract: clamp0(state.perf && state.perf.corpContract)
+      },
+
       updatedAt: new Date().toISOString()
     };
     saveState(state);
@@ -481,11 +474,19 @@
     let cost=0, visit=0, contract=0;
 
     keys.forEach(k=>{
-      const partners = (state.archive[k] && state.archive[k].partners) ? state.archive[k].partners : [];
+      const arc = state.archive && state.archive[k] ? state.archive[k] : {};
+      const partners = arc.partners ? arc.partners : [];
       const s = sumPartners(partners);
+
       cost += s.totalCost;
-      visit += s.totalVisit;
-      contract += s.totalContract;
+
+      // perfがあればそれを優先（=月報/index入力の法人来場・法人契約）
+      // perfが無い過去データは、従来通り「提携合計」を代替として使う
+      const v = (arc.perf && ("corpVisit" in arc.perf)) ? clamp0(arc.perf.corpVisit) : s.totalVisit;
+      const c = (arc.perf && ("corpContract" in arc.perf)) ? clamp0(arc.perf.corpContract) : s.totalContract;
+
+      visit += v;
+      contract += c;
     });
 
     return {
@@ -497,11 +498,19 @@
 
   function computeSummary(){
     const m = sumPartners(state.partners || []);
-    $("s_cv").textContent   = nf.format(m.totalVisit);
-    $("s_cc").textContent   = nf.format(m.totalContract);
+
+    // ★月報(index)で入力した「法人来場/法人契約」を表示（page2では提携合計ではなく、総数として扱う）
+    const corpVisit = clamp0(state.perf && state.perf.corpVisit);
+    const corpContract = clamp0(state.perf && state.perf.corpContract);
+
+    $("s_cv").textContent   = nf.format(corpVisit);
+    $("s_cc").textContent   = nf.format(corpContract);
     $("s_cost").textContent = nf.format(m.totalCost);
-    $("s_cpa").textContent  = m.visitCpa.toFixed(1);
-    $("s_cpp").textContent  = m.contractUnit.toFixed(1);
+
+    const sCpa = corpVisit > 0 ? (m.totalCost / corpVisit) : 0;
+    const sCpp = corpContract > 0 ? (m.totalCost / corpContract) : 0;
+    $("s_cpa").textContent  = sCpa.toFixed(1);
+    $("s_cpp").textContent  = sCpp.toFixed(1);
 
     const c = computeCumulative(currentYM);
     $("c_cv").textContent   = nf.format(c.visit);
@@ -668,11 +677,7 @@
     return merged;
   }
 
-  window.addEventListener("load", async ()=>{
-    state = await loadFromSrcOrLocal();
-    state.meta = state.meta || {};
-    state.archive = state.archive || {};
-    applySrcToTabs();
+  window.addEventListener("load", ()=>{
     ensureMonthData();
     render();
     setSaveStatus("保存済み");
@@ -699,6 +704,11 @@
       persistMonth();
       state.meta.periodStart = addMonths(state.meta.periodStart, -1);
       normalizeMetaToMonth(state.meta.periodStart);
+      
+      // ★月を切り替えたら、法人来場/契約はゼロから（未入力なら0）
+      state.perf = state.perf || {};
+      state.perf.corpVisit = 0;
+      state.perf.corpContract = 0;
       saveState(state);
       state = loadState();
       state.archive = state.archive || {};
@@ -712,6 +722,11 @@
       persistMonth();
       state.meta.periodStart = addMonths(state.meta.periodStart, +1);
       normalizeMetaToMonth(state.meta.periodStart);
+      
+      // ★月を切り替えたら、法人来場/契約はゼロから（未入力なら0）
+      state.perf = state.perf || {};
+      state.perf.corpVisit = 0;
+      state.perf.corpContract = 0;
       saveState(state);
       state = loadState();
       state.archive = state.archive || {};
