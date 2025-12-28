@@ -8,17 +8,17 @@
     "targetCompanies": 1856
   },
   "perf": {
-    "totalVisit": 85,
-    "totalContract": 4,
-    "corpVisit": 7,
-    "corpContract": 3,
+    "totalVisit": 90,
+    "totalContract": 5,
+    "corpVisit": 5,
+    "corpContract": 5,
     "referralCards": 3
   },
   "lastYear": {
-    "totalVisit": 91,
-    "totalContract": 3,
-    "corpVisit": 8,
-    "corpContract": 2,
+    "totalVisit": 90,
+    "totalContract": 5,
+    "corpVisit": 10,
+    "corpContract": 5,
     "referralCards": 0
   },
   "nextMonthPast": {
@@ -37,41 +37,65 @@
   },
   "partners": [
     {
-      "name": "ベルス",
-      "property": "LP新松戸",
+      "name": "",
+      "property": "",
       "visit": 2,
-      "contract": 0,
-      "first": 1,
+      "contract": 3,
+      "first": 0,
       "apply": 0
     },
     {
-      "name": "ライジングサポート",
-      "property": "LP光が丘Ⅲ",
+      "name": "",
+      "property": "",
       "visit": 3,
+      "contract": 2,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "",
+      "property": "",
+      "visit": 0,
       "contract": 0,
       "first": 0,
       "apply": 0
     },
     {
-      "name": "日立",
-      "property": "LP瑞江Ⅹ",
-      "visit": 1,
-      "contract": 1,
-      "first": 0,
-      "apply": 1
-    },
-    {
-      "name": "ホンダ開発",
-      "property": "LP",
-      "visit": 2,
+      "name": "",
+      "property": "",
+      "visit": 0,
       "contract": 0,
       "first": 0,
-      "apply": 1
+      "apply": 0
     },
     {
-      "name": "リロクラブ",
-      "property": "LP",
-      "visit": 5,
+      "name": "",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "",
+      "property": "",
+      "visit": 0,
       "contract": 0,
       "first": 0,
       "apply": 0
@@ -170,7 +194,7 @@
           "schedule": ""
         }
       ],
-      "updatedAt": "2025-12-27T15:29:32.679Z"
+      "updatedAt": "2025-12-27T15:36:07.162Z"
     },
     "2026-01": {
       "partners": [
