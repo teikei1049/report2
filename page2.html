@@ -209,10 +209,7 @@
     }
     .iconbtn:hover{ background:var(--soft); }
     .icon{ width:16px; height:16px; display:block; }
-  
-      .cell2{display:flex;flex-direction:column;gap:4px;}
-      .sub{font-size:11px;opacity:.75;line-height:1.1;}
-    </style>
+  </style>
 </head>
 
 <body>
@@ -365,80 +362,6 @@
   state.meta = state.meta || {};
   state.archive = state.archive || {}; // { "YYYY-MM": { partners, planned, updatedAt } }
 
-  // ===== index(当月抜粋) ↔ page2(現提携) 連携 =====
-  state.reportArchive = (state.reportArchive && typeof state.reportArchive === "object") ? state.reportArchive : {}; // { "YYYY-MM": { partners, updatedAt } }
-
-  function normName(s){ return String(s||"").trim().toLowerCase(); }
-
-  function getReportPartnersForYM(ym){
-    const arc = state.reportArchive && state.reportArchive[ym];
-    if(arc && Array.isArray(arc.partners)) return arc.partners;
-    // fallback（旧データ）
-    if(Array.isArray(state.reportPartners)) return state.reportPartners;
-    return [];
-  }
-
-  // indexの「提携先（当月抜粋）」→ page2現提携の当月来場/契約へ同期
-  function syncFromIndexExcerpt(){
-    const src = getReportPartnersForYM(currentYM);
-    if(!Array.isArray(src) || src.length===0) return false;
-
-    const map = new Map();
-    src.forEach(r=>{
-      const k = normName(r && r.name);
-      if(!k) return;
-      map.set(k, {
-        name: (r && r.name) ? String(r.name) : "",
-        visit: clamp0(r && r.visit),
-        contract: clamp0(r && r.contract),
-      });
-    });
-
-    let changed = false;
-    state.partners = Array.isArray(state.partners) ? state.partners : [defaultPartner()];
-
-    // 既存行へ反映／無ければ追加
-    for(const [k, v] of map.entries()){
-      const idx = state.partners.findIndex(p=> normName(p && p.name) === k);
-      if(idx >= 0){
-        const p = state.partners[idx];
-        if(clamp0(p.visit) !== v.visit){ p.visit = v.visit; changed = true; }
-        if(clamp0(p.contract) !== v.contract){ p.contract = v.contract; changed = true; }
-      }else{
-        const np = defaultPartner();
-        np.name = v.name;
-        np.visit = v.visit;
-        np.contract = v.contract;
-        state.partners.push(np);
-        changed = true;
-      }
-    }
-
-    if(changed){
-      persistMonth();
-      setSaveStatus("保存済み");
-    }
-    return changed;
-  }
-
-  function buildCumulativeMap(uptoYM){
-    const out = new Map(); // normName -> { visit, contract }
-    const keys = Object.keys(state.archive || {}).filter(k=> k <= uptoYM).sort();
-    keys.forEach(k=>{
-      const partners = (state.archive[k] && state.archive[k].partners) ? state.archive[k].partners : [];
-      (partners||[]).forEach(p=>{
-        const nk = normName(p && p.name);
-        if(!nk) return;
-        const cur = out.get(nk) || { visit:0, contract:0 };
-        cur.visit += clamp0(p && p.visit);
-        cur.contract += clamp0(p && p.contract);
-        out.set(nk, cur);
-      });
-    });
-    return out;
-  }
-
-
   function setSaveStatus(s){ $("saveStatus").textContent = s; }
   function markDirty(){ setSaveStatus("編集中…"); }
 
@@ -489,15 +412,17 @@
       state.partners = Array.isArray(arc.partners) ? arc.partners : [defaultPartner()];
       state.planned  = Array.isArray(arc.planned)  ? arc.planned  : [defaultPlanned()];
     }else{
-      // B仕様：企業名/PR/メモは引き継ぎ、数値はゼロで新月を開始
-      const basePartners = Array.isArray(state.partners) ? state.partners : [];
-      state.partners = basePartners.map(p=>{
+      // 新しい月（archive未作成）の初期化：
+      // 企業名/PR/備考などは引き継ぎ、数値はゼロで開始する（B仕様）
+      const base = Array.isArray(state.partners) ? state.partners : [];
+      state.partners = base.map(p=>{
         const row = defaultPartner();
-        row.name = (p && p.name) ? String(p.name) : "";
-        row.pr   = (p && p.pr) ? String(p.pr) : "";
-        row.note = (p && p.note) ? String(p.note) : "";
+        row.name = p && p.name ? String(p.name) : "";
+        row.pr = p && p.pr ? String(p.pr) : "";
+        row.note = p && p.note ? String(p.note) : "";
+        row.property = p && p.property ? String(p.property) : "";
         return row;
-      }).filter(r=>r.name || r.pr || r.note);
+      });
       if(state.partners.length===0) state.partners=[defaultPartner()];
       if(!Array.isArray(state.planned)  || state.planned.length===0)  state.planned=[defaultPlanned()];
       persistMonth();
@@ -505,16 +430,14 @@
 
     if(state.partners.length===0) state.partners=[defaultPartner()];
     if(state.planned.length===0)  state.planned=[defaultPlanned()];
-  
-
-    // index抜粋 → 当月来場/契約を自動反映
-    syncFromIndexExcerpt();
   }
 
   function persistMonth(){
     const clone = (obj) => (window.structuredClone ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)));
     state.archive = state.archive || {};
+    const prevArc = state.archive[currentYM] || {};
     state.archive[currentYM] = {
+      ...prevArc,
       partners: clone(state.partners || []),
       planned:  clone(state.planned  || []),
       updatedAt: new Date().toISOString()
@@ -522,7 +445,66 @@
     saveState(state);
   }
 
-  function sumPartners(partners){
+  
+  // index側（抜粋提携先）の入力を、page2（現提携）の当月行へ自動反映
+  function normalizeName(s){
+    return String(s||"").trim().replace(/[\s　]+/g,"").toLowerCase();
+  }
+
+  function syncFromIndexReportPartners(){
+    const srcList = state.reportPartners;
+    if(!Array.isArray(srcList) || srcList.length===0) return false;
+
+    // index側が入力した月と、page2で表示中の月が違う場合は反映しない（過去月を壊さない）
+    const srcYM = String(state.reportPartnersYM||"").slice(0,7);
+    if(srcYM && srcYM !== currentYM) return false;
+
+    state.partners = Array.isArray(state.partners) ? state.partners : [defaultPartner()];
+
+    const idxMap = new Map();
+    state.partners.forEach((p,i)=>{
+      const k = normalizeName(p && p.name);
+      if(k && !idxMap.has(k)) idxMap.set(k,i);
+    });
+
+    let changed = false;
+
+    for(const rp of srcList){
+      const key = normalizeName(rp && rp.name);
+      if(!key) continue;
+
+      const v = clamp0(rp && rp.visit);
+      const c = clamp0(rp && rp.contract);
+      const f = clamp0(rp && rp.first);
+      const a = clamp0(rp && rp.apply);
+
+      if(idxMap.has(key)){
+        const p = state.partners[idxMap.get(key)];
+        if(clamp0(p.visit) !== v){ p.visit = v; changed = true; }
+        if(clamp0(p.contract) !== c){ p.contract = c; changed = true; }
+        if(clamp0(p.first) !== f){ p.first = f; changed = true; }
+        if(clamp0(p.apply) !== a){ p.apply = a; changed = true; }
+      }else{
+        const p = defaultPartner();
+        p.name = String(rp && rp.name || "");
+        p.visit = v;
+        p.contract = c;
+        p.first = f;
+        p.apply = a;
+        state.partners.push(p);
+        idxMap.set(key, state.partners.length-1);
+        changed = true;
+      }
+    }
+
+    if(changed){
+      persistMonth(); // archiveへ保存（他の月に影響しない）
+      setSaveStatus("保存済み");
+    }
+    return changed;
+  }
+
+function sumPartners(partners){
     const totalCost = (partners||[]).reduce((s,p)=> s + clamp0(p && p.cost), 0);
     const totalVisit = (partners||[]).reduce((s,p)=> s + clamp0(p && p.visit), 0);
     const totalContract = (partners||[]).reduce((s,p)=> s + clamp0(p && p.contract), 0);
@@ -587,15 +569,14 @@
   function renderPartners(){
     const tbody = $("partnerBody");
     tbody.innerHTML = "";
-    const cumMap = buildCumulativeMap(currentYM);
 
     (state.partners || []).forEach((p, idx)=>{
       p = p || {};
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td><input data-k="name" value="${escapeHtml(p.name||"")}"></td>
-        <td><div class="cell2"><input type="number" data-k="visit" value="${clamp0(p.visit)}" min="0"><div class="sub" data-cum="visit">累計: ${nf.format((cumMap.get(normName(p.name))||{visit:0}).visit)}</div></div></td>
-        <td><div class="cell2"><input type="number" data-k="contract" value="${clamp0(p.contract)}" min="0"><div class="sub" data-cum="contract">累計: ${nf.format((cumMap.get(normName(p.name))||{contract:0}).contract)}</div></div></td>
+        <td><input type="number" data-k="visit" value="${clamp0(p.visit)}" min="0"></td>
+        <td><input type="number" data-k="contract" value="${clamp0(p.contract)}" min="0"></td>
         <td><input data-k="pr" value="${escapeHtml(p.pr||"")}"></td>
         <td><input type="number" data-k="cost" value="${clamp0(p.cost)}" min="0"></td>
         <td><input type="number" data-k="benefit" value="${clamp0(p.benefit)}" min="0"></td>
@@ -615,12 +596,6 @@
           persistMonth();
           setSaveStatus("保存済み");
           computeSummary();
-          // 累計表示をこの行だけ更新
-          const cum = buildCumulativeMap(currentYM).get(normName(state.partners[idx].name)) || {visit:0, contract:0};
-          const vEl = tr.querySelector('[data-cum="visit"]');
-          const cEl = tr.querySelector('[data-cum="contract"]');
-          if(vEl) vEl.textContent = `累計: ${nf.format(cum.visit)}`;
-          if(cEl) cEl.textContent = `累計: ${nf.format(cum.contract)}`;
         });
       });
 
@@ -732,6 +707,7 @@
 
   window.addEventListener("load", ()=>{
     ensureMonthData();
+    syncFromIndexReportPartners();
     render();
     setSaveStatus("保存済み");
 
@@ -761,6 +737,7 @@
       state = loadState();
       state.archive = state.archive || {};
       ensureMonthData();
+      syncFromIndexReportPartners();
       render();
       setSaveStatus("保存済み");
     });
@@ -774,6 +751,7 @@
       state = loadState();
       state.archive = state.archive || {};
       ensureMonthData();
+      syncFromIndexReportPartners();
       render();
       setSaveStatus("保存済み");
     });
@@ -805,6 +783,7 @@
         state = loadState();
         state.archive = state.archive || {};
         ensureMonthData();
+        syncFromIndexReportPartners();
         render();
         setSaveStatus("保存済み");
         alert("JSON取込が完了しました。");
