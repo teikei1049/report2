@@ -1114,9 +1114,37 @@
     }
   }
 
-  let state = loadState();
+  // 共有用: ?src= のJSONから状態を作る（indexでも数字付きで共有するため）
+  function mergeStateFromObject(obj){
+    const s = clone(DEFAULT_STATE);
+    const out = {
+      ...s,
+      ...(obj||{}),
+      meta: { ...s.meta, ...((obj&&obj.meta)||{}) },
+      counts: { ...s.counts, ...((obj&&obj.counts)||{}) },
+      perf: { ...s.perf, ...((obj&&obj.perf)||{}) },
+      lastYear: { ...s.lastYear, ...((obj&&obj.lastYear)||{}) },
+      nextMonthPast: { ...s.nextMonthPast, ...((obj&&obj.nextMonthPast)||{}) },
+      nextTarget: { ...s.nextTarget, ...((obj&&obj.nextTarget)||{}) },
+      partners: (obj && Array.isArray(obj.partners) && obj.partners.length) ? obj.partners : clone(s.partners),
+      topics: (obj && typeof obj.topics === "string") ? obj.topics : ""
+    };
+    out.partners = out.partners.map(p => ({
+      name: p?.name ?? "",
+      property: p?.property ?? "",
+      visit: Number(p?.visit ?? 0) || 0,
+      contract: Number(p?.contract ?? 0) || 0,
+      first: Number(p?.first ?? 0) || 0,
+      apply: Number(p?.apply ?? 0) || 0
+    }));
+    return out;
+  }
 
-  // ===================== Utilities =====================
+
+
+  let state = clone(DEFAULT_STATE);
+
+// ===================== Utilities =====================
   const $ = (id) => document.getElementById(id);
   const nfInt = new Intl.NumberFormat("ja-JP");
 
@@ -1694,18 +1722,51 @@
 
     $("btnPrint").addEventListener("click", ()=>{
       // 印刷用ページへ（別タブ）
-      const w = window.open("./print.html", "_blank");
+      const src = new URLSearchParams(location.search).get("src");
+      const u = new URL("./print.html", location.href);
+      if(src) u.searchParams.set("src", src);
+      const w = window.open(u.toString(), "_blank");
       if(w) w.opener = null;
     });
   }
 
   // ===================== Boot =====================
-  initCharts();
-  setUIFromState();
-  renderPartners();
-  recalcAll();
-  attachEventsOnce();
-  setSaveStatus("保存済み");
+  async function boot(){
+    const src = new URLSearchParams(location.search).get("src");
+
+    if(src){
+      try{
+        const res = await fetch(src, { cache: "no-store" });
+        if(!res.ok) throw new Error("fetch failed: " + res.status);
+        const obj = await res.json();
+        state = mergeStateFromObject(obj);
+
+        // タブ遷移でも src を引き継ぐ
+        document.querySelectorAll(".nav a.tab").forEach(a=>{
+          const href = a.getAttribute("href");
+          if(!href) return;
+          try{
+            const u = new URL(href, location.href);
+            u.searchParams.set("src", src);
+            a.href = u.toString();
+          }catch(e){}
+        });
+      }catch(e){
+        console.warn("[index] src load failed. fallback to localStorage.", e);
+        state = loadState();
+      }
+    }else{
+      state = loadState();
+    }
+
+    initCharts();
+    setUIFromState();
+    renderPartners();
+    recalcAll();
+    attachEventsOnce();
+    setSaveStatus("保存済み");
+  }
+  boot();
 })();
 </script>
 </body>
