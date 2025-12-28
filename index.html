@@ -1116,6 +1116,73 @@
 
   let state = loadState();
 
+  
+  // ===================== Index "提携先（当月抜粋）" month archive =====================
+  state.reportArchive = (state.reportArchive && typeof state.reportArchive === "object") ? state.reportArchive : {}; // { "YYYY-MM": { partners, updatedAt } }
+  state.reportPartners = Array.isArray(state.reportPartners) ? state.reportPartners : [];
+
+  function ymFromIsoStart(isoStart){
+    if(!isoStart) return "";
+    const d = new Date(isoStart);
+    if(!Number.isFinite(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    return `${y}-${m}`;
+  }
+  function defaultReportPartner(){
+    return { name:"", property:"", visit:0, contract:0, first:0, apply:0 };
+  }
+  function normalizeReportPartners(list){
+    const out = (Array.isArray(list) ? list : []).map(p=>({
+      name: (p && p.name) ? String(p.name) : "",
+      property: (p && p.property) ? String(p.property) : "",
+      visit: clamp0(p && p.visit),
+      contract: clamp0(p && p.contract),
+      first: clamp0(p && p.first),
+      apply: clamp0(p && p.apply),
+    }));
+    return out.length ? out : [defaultReportPartner()];
+  }
+  let currentReportYM = ymFromIsoStart(state.meta && state.meta.periodStart) || ymFromIsoStart(new Date().toISOString().slice(0,10));
+
+  function persistReportMonth(){
+    const clone = (obj) => (window.structuredClone ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)));
+    state.reportArchive = state.reportArchive || {};
+    state.reportArchive[currentReportYM] = {
+      partners: clone(state.reportPartners || []),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  function loadReportMonth(ym, carryFrom){
+    const arc = state.reportArchive && state.reportArchive[ym];
+    if(arc && Array.isArray(arc.partners) && arc.partners.length){
+      return normalizeReportPartners(arc.partners);
+    }
+    // B仕様：会社名/物件名だけ引き継ぎ、数値はゼロ
+    const base = Array.isArray(carryFrom) && carryFrom.length ? carryFrom : (state.reportPartners || []);
+    const next = base
+      .map(p=>({ name:(p && p.name) ? String(p.name) : "", property:(p && p.property) ? String(p.property) : "", visit:0, contract:0, first:0, apply:0 }))
+      .filter(p=>p.name || p.property);
+    return next.length ? next : [defaultReportPartner()];
+  }
+
+  // 初回：旧データ(state.partners)からの移行も含めて当月を確定
+  if(state.reportArchive && state.reportArchive[currentReportYM] && Array.isArray(state.reportArchive[currentReportYM].partners)){
+    state.reportPartners = normalizeReportPartners(state.reportArchive[currentReportYM].partners);
+  }else if(Array.isArray(state.reportPartners) && state.reportPartners.length){
+    state.reportPartners = normalizeReportPartners(state.reportPartners);
+    persistReportMonth();
+  }else if(Array.isArray(state.partners) && state.partners.length){
+    // 旧: indexがstate.partnersを使っていた場合の救済
+    state.reportPartners = normalizeReportPartners(state.partners);
+    persistReportMonth();
+  }else{
+    state.reportPartners = [defaultReportPartner()];
+    persistReportMonth();
+  }
+  saveState(state);
+
   // ===================== Utilities =====================
   const $ = (id) => document.getElementById(id);
   const nfInt = new Intl.NumberFormat("ja-JP");
@@ -1369,7 +1436,7 @@
     const tbody = $("partnersBody");
     tbody.innerHTML = "";
 
-    (state.partners || []).forEach((p, idx)=>{
+    (state.reportPartners || []).forEach((p, idx)=>{
       const tr = document.createElement("tr");
 
       const tdName = document.createElement("td");
@@ -1452,12 +1519,13 @@
       b.setAttribute("aria-label","削除");
       b.innerHTML = trashSvg();
       b.addEventListener("click", ()=>{
-        state.partners.splice(idx, 1);
-        if(state.partners.length === 0){
-          state.partners.push({ name:"", property:"", visit:0, contract:0, first:0, apply:0 });
+        state.reportPartners.splice(idx, 1);
+        if(state.reportPartners.length === 0){
+          state.reportPartners.push({ name:"", property:"", visit:0, contract:0, first:0, apply:0 });
         }
         renderPartners();
         recalcAll();
+        persistReportMonth();
         saveState();
       });
       tdDel.appendChild(b);
@@ -1568,10 +1636,10 @@
     setDelta("d_cy",  k_cy,  ly_cy);
 
     // Partners sums
-    const sumV = (state.partners||[]).reduce((s,p)=> s + clamp0(p.visit), 0);
-    const sumC = (state.partners||[]).reduce((s,p)=> s + clamp0(p.contract), 0);
-    const sumF = (state.partners||[]).reduce((s,p)=> s + clamp0(p.first), 0);
-    const sumA = (state.partners||[]).reduce((s,p)=> s + clamp0(p.apply), 0);
+    const sumV = (state.reportPartners||[]).reduce((s,p)=> s + clamp0(p.visit), 0);
+    const sumC = (state.reportPartners||[]).reduce((s,p)=> s + clamp0(p.contract), 0);
+    const sumF = (state.reportPartners||[]).reduce((s,p)=> s + clamp0(p.first), 0);
+    const sumA = (state.reportPartners||[]).reduce((s,p)=> s + clamp0(p.apply), 0);
     $("sumPartnerVisit").textContent = nfInt.format(sumV);
     $("sumPartnerContract").textContent = nfInt.format(sumC);
     $("sumPartnerFirst").textContent = nfInt.format(sumF);
@@ -1629,6 +1697,8 @@
           nextMonthPast: { ...s.nextMonthPast, ...(obj.nextMonthPast||{}) },
           nextTarget: { ...s.nextTarget, ...(obj.nextTarget||{}) },
           partners: Array.isArray(obj.partners) && obj.partners.length ? obj.partners : clone(s.partners),
+          reportPartners: Array.isArray(obj.reportPartners) && obj.reportPartners.length ? obj.reportPartners : clone(s.reportPartners||[]),
+          reportArchive: (obj.reportArchive && typeof obj.reportArchive === "object") ? obj.reportArchive : (clone(s.reportArchive||{})),
           topics: typeof obj.topics === "string" ? obj.topics : ""
         };
 
@@ -1641,9 +1711,17 @@
           apply: Number(p?.apply ?? 0) || 0
         }));
 
+
+        // reportPartners / reportArchive
+        currentReportYM = ymFromIsoStart(state.meta && state.meta.periodStart) || currentReportYM;
+        state.reportArchive = (state.reportArchive && typeof state.reportArchive === "object") ? state.reportArchive : {};
+        state.reportPartners = normalizeReportPartners(state.reportPartners);
+        persistReportMonth();
+
         setUIFromState();
         renderPartners();
         recalcAll();
+        persistReportMonth();
         saveState();
       }catch(e){
         alert("JSONの読み込みに失敗しました。形式を確認してください。");
@@ -1662,37 +1740,12 @@
   }
 
   // ===================== Events =====================
-  // ★page2側の累計計算に使うため、月報(index)の「法人来場/法人契約」を月別にスナップショット保存
-  function ymFromIsoStart(isoStart){
-    const d = isoStart ? new Date(isoStart) : new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    return `${y}-${m}`;
-  }
-  function persistCorpToArchive(){
-    const ym = ymFromIsoStart(state && state.meta ? state.meta.periodStart : "");
-    state.archive = state.archive || {};
-    const arc = state.archive[ym] || {};
-    arc.perf = arc.perf || {};
-    arc.perf.corpVisit = clamp0(state && state.perf ? state.perf.corpVisit : 0);
-    arc.perf.corpContract = clamp0(state && state.perf ? state.perf.corpContract : 0);
-    arc.updatedAt = new Date().toISOString();
-    state.archive[ym] = arc;
-  }
-
   function attachEventsOnce(){
-    const onAnyInput = (e) => {
+    const onAnyInput = () => {
       setSaveStatus("編集中…");
       readInputsToState();
       recalcPeriodsUI();
       recalcAll();
-
-      // ★法人来場/法人契約が変更されたときだけ、月別スナップショットを更新
-      const id = e && e.target ? e.target.id : "";
-      if(id === "v_corpVisit" || id === "v_corpContract"){
-        persistCorpToArchive();
-      }
-
       saveState();
     };
 
@@ -1712,6 +1765,30 @@
       recalcAll();
       saveState();
     });
+
+    
+    // periodStartを月として扱い、提携先（当月抜粋）を月別に切り替える
+    const ps = $("periodStart");
+    if(ps){
+      ps.addEventListener("change", ()=>{
+        const newYM = ymFromIsoStart(ps.value);
+        if(newYM && newYM !== currentReportYM){
+          // 旧月を保存
+          persistReportMonth();
+          const prev = state.reportPartners;
+          currentReportYM = newYM;
+
+          // 新月を読み込み（無ければB仕様で初期化）
+          state.reportPartners = loadReportMonth(newYM, prev);
+          persistReportMonth();
+
+          saveState(state);
+          renderPartners();
+          recalcAll();
+          setSaveStatus("保存済み");
+        }
+      });
+    }
 
     $("btnExport").addEventListener("click", exportJSON);
     $("btnImport").addEventListener("click", importJSON);

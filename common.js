@@ -27,6 +27,10 @@ const DEFAULT_STATE = (() => {
     planned: [
       { name:"", companySize:"", proposal:"", status:"", nextAction:"", schedule:"" }
     ],
+    reportPartners: [
+      { name:"", property:"", visit:0, first:0, apply:0, contract:0 }
+    ],
+    reportArchive: {},
     topics: ""
   };
 })();
