@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>HB Monthly Report - View</title>
+  <style>
+    :root{ --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --soft:#f1f5f9; --radius:14px; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif; background:#fff; color:var(--ink); }
+    .top{ padding:14px 16px; background:linear-gradient(90deg,#0f172a,#101c38); color:#fff; display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .btn{ cursor:pointer; border:none; padding:10px 12px; border-radius:12px; font-weight:900; background:rgba(255,255,255,.10); color:#fff; }
+    .nav{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .tab{
+      color:#fff;
+      text-decoration:none;
+      font-weight:800;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      white-space:nowrap;
+    }
+    .tab.active{ background:rgba(37,99,235,.92); border-color:rgba(37,99,235,1); }
+    .source{ color:rgba(255,255,255,.8); font-weight:800; font-size:12px; margin-left:10px; }
+
+    .wrap{ padding:14px; }
+    .page{ margin:0 auto 18px auto; }
+    .card{ border:1px solid var(--line); border-radius:var(--radius); padding:12px; margin-bottom:12px; }
+    .kpis{ display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:10px; }
+    .kpi{ border:1px solid var(--line); border-radius:14px; padding:10px; background:linear-gradient(180deg,#fff,#f8fafc); }
+    .kpi .t{ font-size:11px; font-weight:900; color:var(--muted); }
+    .kpi .v{ margin-top:6px; font-size:22px; font-weight:900; }
+    .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+    th, td{ border:1px solid var(--line); padding:8px; font-size:11px; vertical-align:top; word-break:break-word; }
+    th{ background:var(--ink); color:#fff; text-align:left; }
+
+    .pageBreak{ display:none; }
+
+    @media print{
+      @page{ size:A4 landscape; margin:8mm; }
+      .top{ display:none; }
+      .wrap{ padding:0; }
+      .pageBreak{ display:block; break-before:page; page-break-before:always; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div>
+      <b>HB Monthly Report</b>
+      <span id="periodLabel" style="margin-left:8px;color:rgba(255,255,255,.85);font-weight:900;">—</span>
+      <span class="source">src: <span id="source">—</span></span>
+    </div>
+
+    <div class="nav">
+      <a class="tab" href="./index.html">月報</a>
+      <a class="tab" href="./page2.html">法人活動</a>
+      <a class="tab active" href="./view.html">閲覧</a>
+      <a class="tab" href="./print.html" target="_blank" rel="noopener">PDF印刷</a>
+      <button class="btn" id="btnReload" type="button">再読込</button>
+      <button class="btn" type="button" onclick="window.print()">印刷（PDF）</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- Page1 -->
+    <div class="page">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div><b>Page1（月報）</b></div>
+          <div id="asof" style="color:var(--muted);font-weight:900;">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi"><div class="t">総歩留り</div><div class="v"><span id="k_ty">0.0</span>%</div></div>
+          <div class="kpi"><div class="t">法人来場比</div><div class="v"><span id="k_cvr">0.0</span>%</div></div>
+          <div class="kpi"><div class="t">法人契約比</div><div class="v"><span id="k_ccr">0.0</span>%</div></div>
+          <div class="kpi"><div class="t">法人歩留り</div><div class="v"><span id="k_cy">0.0</span>%</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="grid2">
+          <div>
+            <b>当月実績</b><br/>
+            総来場：<span id="tv">0</span> ／ 総契約：<span id="tc">0</span><br/>
+            法人来場：<span id="cv">0</span> ／ 法人契約：<span id="cc">0</span><br/>
+            紹介カード：<span id="rc">0</span>
+          </div>
+          <div>
+            <b>概況</b><br/>
+            提携会社数：<span id="pc">0</span><br/>
+            対象企業総数：<span id="tg">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>Topics</b>
+        <div id="topics" style="white-space:pre-wrap;line-height:1.7;margin-top:6px;">—</div>
+      </div>
+    </div>
+
+    <div class="pageBreak"></div>
+
+    <!-- Page2 -->
+    <div class="page">
+      <div class="card">
+        <b>Page2（法人活動）</b>
+      </div>
+
+      <div class="card">
+        法人来場：<span id="s_cv">0</span> ／ 法人契約：<span id="s_cc">0</span><br/>
+        PR費用合計：<span id="s_cost">0</span> ／ 来場CPA（合計）：<span id="s_cpa">0.0</span>
+      </div>
+
+      <div class="card">
+        <b>現提携（活動・PR・単価）</b>
+        <div style="overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:150px;">企業名</th>
+                <th style="width:140px;">対象物件</th>
+                <th style="width:60px;">来場</th>
+                <th style="width:60px;">初回</th>
+                <th style="width:60px;">申込</th>
+                <th style="width:60px;">契約</th>
+                <th style="width:220px;">PR内容</th>
+                <th style="width:90px;">費用</th>
+                <th style="width:140px;">特典</th>
+                <th style="width:90px;">手数料</th>
+                <th>備考</th>
+              </tr>
+            </thead>
+            <tbody id="tblPartners"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <b>法人業務提携（予定・交渉中）</b>
+        <div style="overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:8px;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:170px;">企業名</th>
+                <th style="width:140px;">企業規模</th>
+                <th>提案内容</th>
+                <th style="width:150px;">ステータス</th>
+                <th style="width:180px;">次アクション</th>
+                <th style="width:120px;">予定時期</th>
+              </tr>
+            </thead>
+            <tbody id="tblPlanned"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="./common.js"></script>
+<script>
+  const $ = (id)=>document.getElementById(id);
+  const nf = new Intl.NumberFormat("ja-JP");
+  let state = null;
+
+  function computeCPA(cost, denom){
+    cost = clamp0(cost); denom = clamp0(denom);
+    return denom > 0 ? (cost/denom) : 0;
+  }
+
+
+  const qs = new URLSearchParams(location.search);
+  const defaultSrc = "./datalatest.json";
+  let src = qs.get("src") || defaultSrc;
+
+function propagateSrcToNav(){
+  const qs2 = new URLSearchParams(location.search);
+  if(!qs2.has("src")) return;
+  const src2 = qs2.get("src");
+  const v2 = qs2.get("v");
+  document.querySelectorAll(".nav a.tab").forEach(a=>{
+    const href = a.getAttribute("href");
+    if(!href) return;
+    const u = new URL(href, location.href);
+    u.searchParams.set("src", src2);
+    if(v2) u.searchParams.set("v", v2);
+    a.href = u.toString();
+  });
+}
+
+  async function loadFromSrc(){
+    try{
+      $("source").textContent = src;
+      const res = await fetch(src, { cache: "no-store" });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      return deepMerge(DEFAULT_STATE, raw);
+    }catch(err){
+      $("source").textContent = "localStorage（読込失敗）";
+      return loadState();
+    }
+  }
+
+  function render(state){
+
+    // header
+    $("periodLabel").textContent = derivePeriodLabel(state.meta.periodStart);
+    $("asof").textContent = fmtJPDate(state.meta.periodEnd);
+
+    // KPI
+    const { now } = computeKPI(state);
+    $("k_ty").textContent = fmt1(now.ty);
+    $("k_cvr").textContent = fmt1(now.cvr);
+    $("k_ccr").textContent = fmt1(now.ccr);
+    $("k_cy").textContent = fmt1(now.cy);
+
+    // numbers
+    const c = state.perf || {};
+    $("tv").textContent = nf.format(clamp0(c.totalVisit));
+    $("tc").textContent = nf.format(clamp0(c.totalContract));
+    $("cv").textContent = nf.format(clamp0(c.corpVisit));
+    $("cc").textContent = nf.format(clamp0(c.corpContract));
+    $("rc").textContent = nf.format(clamp0(c.referralCards));
+
+    $("pc").textContent = nf.format(clamp0(state.counts && state.counts.partnerCompanies));
+    $("tg").textContent = nf.format(clamp0(state.counts && state.counts.targetCompanies));
+
+    const topics = (state.topics || "").trim();
+    $("topics").textContent = topics ? topics : "—";
+
+    // Page2 summary
+    $("s_cv").textContent = nf.format(clamp0(c.corpVisit));
+    $("s_cc").textContent = nf.format(clamp0(c.corpContract));
+    const totalCost = (state.partners || []).reduce((s,p)=> s + clamp0(p && p.cost), 0);
+    const totalVisit = (state.partners || []).reduce((s,p)=> s + clamp0(p && p.visit), 0);
+    $("s_cost").textContent = nf.format(totalCost);
+    $("s_cpa").textContent = computeCPA(totalCost, totalVisit).toFixed(1);
+
+    // tables
+    const tb = $("tblPartners");
+    tb.innerHTML = "";
+    (state.partners || []).forEach(p=>{
+      p = p || {};
+      const hasAny =
+        ["name","property","pr","benefit","note"].some(k=> String(p[k]||"").trim()) ||
+        [p.visit,p.first,p.apply,p.contract,p.cost,p.fee].some(v=> clamp0(v)>0);
+      if(!hasAny) return;
+
+      const tr = document.createElement("tr");
+      const td = (t)=>{ const x=document.createElement("td"); x.textContent = t; return x; };
+
+      tr.appendChild(td(String(p.name||"").trim()));
+      tr.appendChild(td(String(p.property||"").trim()));
+      tr.appendChild(td(String(clamp0(p.visit))));
+      tr.appendChild(td(String(clamp0(p.first))));
+      tr.appendChild(td(String(clamp0(p.apply))));
+      tr.appendChild(td(String(clamp0(p.contract))));
+      tr.appendChild(td(String(p.pr||"").trim()));
+      tr.appendChild(td(String(clamp0(p.cost))));
+      tr.appendChild(td(String(p.benefit||"").trim()));
+      tr.appendChild(td(String(clamp0(p.fee))));
+      tr.appendChild(td(String(p.note||"").trim()));
+      tb.appendChild(tr);
+    });
+
+    const tp = $("tblPlanned");
+    tp.innerHTML = "";
+    (state.planned || []).forEach(p=>{
+      p = p || {};
+      const hasAny = ["name","companySize","proposal","status","nextAction","schedule"].some(k=> String(p[k]||"").trim());
+      if(!hasAny) return;
+
+      const tr = document.createElement("tr");
+      const td = (t)=>{ const x=document.createElement("td"); x.textContent = t; return x; };
+
+      tr.appendChild(td(String(p.name||"").trim()));
+      tr.appendChild(td(String(p.companySize||"").trim()));
+      tr.appendChild(td(String(p.proposal||"").trim()));
+      tr.appendChild(td(String(p.status||"").trim()));
+      tr.appendChild(td(String(p.nextAction||"").trim()));
+      tr.appendChild(td(String(p.schedule||"").trim()));
+      tp.appendChild(tr);
+    });
+  }
+
+  async function boot(){
+    state = await loadFromSrc();
+    render(state);
+  }
+
+  propagateSrcToNav();
+
+  $("btnReload").addEventListener("click", boot);
+  boot();
+
+</script>
+</body>
+</html>

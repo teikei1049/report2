@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>HB Monthly Report - Page2</title>
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --soft:#f1f5f9; --blue:#2563eb; --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html, body{ margin:0; padding:0; overflow-x:hidden; }
+    body{
+      font-family: system-ui, -apple-system, "Noto Sans JP", sans-serif;
+      background:#0b1220;
+      color:var(--ink);
+    }
+
+    /* 画面幅100%にフィット */
+    .app{
+      width:100%;
+      max-width:none;
+      background:#fff;
+      border-radius:var(--radius);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.15);
+    }
+
+    /* --- header --- */
+    .top{
+      background:linear-gradient(90deg,#0f172a,#101c38);
+      color:#fff;
+      padding:14px 16px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .nav{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .tab{
+      color:#fff;
+      text-decoration:none;
+      font-weight:800;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      white-space:nowrap;
+    }
+    .tab.active{ background:rgba(37,99,235,.92); border-color:rgba(37,99,235,1); }
+    .chip{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      font-weight:800;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    /* --- buttons --- */
+    .btn{
+      cursor:pointer;
+      border:none;
+      padding:9px 10px;
+      border-radius:12px;
+      font-weight:900;
+      background:var(--soft);
+      white-space:nowrap;
+    }
+    .btn.primary{ background:rgba(37,99,235,.92); color:#fff; }
+    .btn.small{ padding:7px 9px; border-radius:999px; font-size:12px; }
+
+    /* --- layout --- */
+    .wrap{
+      padding:16px;
+      background:linear-gradient(180deg,#fff,#f8fafc);
+      display:grid;
+      gap:14px;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+    }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    /* --- summary --- */
+    .summaryBox{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+    }
+    .summaryBox .cap{
+      font-size:12px;
+      font-weight:900;
+      margin:0 0 10px 0;
+      color:var(--muted);
+    }
+    /* 色合いは維持 */
+    .summaryBox.month{ background:#eff6ff; border-color:#bfdbfe; }
+    .summaryBox.cum{   background:#ecfdf5; border-color:#bbf7d0; }
+
+    /* ★必ず1行（5枚）に固定。スクロールは出さない */
+    .kpiGrid{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap:12px;
+      align-items:stretch;
+    }
+    .mini{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:linear-gradient(180deg,#fff,#f8fafc);
+      min-width:0; /* これがないと潰れない */
+    }
+    .mini .t{
+      font-size:11px;
+      font-weight:900;
+      color:var(--muted);
+      line-height:1.25;
+      word-break:break-word;
+    }
+    .mini .v{
+      margin-top:8px;
+      font-size:20px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    /* 画面が狭い時でも「1行」を守るために、少しだけ圧縮 */
+    @media (max-width: 1100px){
+      .kpiGrid{ gap:10px; }
+      .mini{ padding:9px 10px; }
+      .mini .v{ font-size:18px; }
+    }
+    @media (max-width: 900px){
+      .kpiGrid{ gap:8px; }
+      .mini{ padding:8px 9px; border-radius:12px; }
+      .mini .t{ font-size:10px; }
+      .mini .v{ font-size:16px; }
+    }
+
+    /* --- tables: 横スクロール無しで必ず収める --- */
+    .tbl{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;     /* スクロールさせない */
+      max-width:100%;
+    }
+    table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+    th, td{
+      border:1px solid var(--line);
+      padding:6px;
+      font-size:12px;
+      vertical-align:top;
+    }
+    th{
+      background:#0f172a;
+      color:#fff;
+      text-align:left;
+      white-space:nowrap;
+      font-weight:900;
+    }
+    td{ overflow:hidden; }
+    td, th{ word-break:break-word; }
+
+    /* 入力欄が押し出して横幅超過するのを防止 */
+    input, textarea{
+      width:100%;
+      min-width:0;
+      max-width:100%;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:6px 8px;
+      font-weight:800;
+      background:#fff;
+    }
+    input[type="number"]{ text-align:right; padding:6px 6px; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{
+      -webkit-appearance:none; margin:0;
+    }
+    input[type="number"]{ -moz-appearance:textfield; }
+
+    /* --- icon button --- */
+    .iconbtn{
+      cursor:pointer;
+      border:none;
+      background:transparent;
+      padding:6px;
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .iconbtn:hover{ background:var(--soft); }
+    .icon{ width:16px; height:16px; display:block; }
+  </style>
+</head>
+
+<body>
+<div class="app">
+  <div class="top">
+    <div>
+      <b>BUSINESS MONTHLY REPORT</b><br/>
+<div style="display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;">
+  <span style="opacity:.9;font-size:12px;font-weight:900;">法人活動</span>
+  <span id="monthLabel"
+        style="opacity:.85;font-size:12px;padding:4px 8px;border-radius:999px;
+               border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);">
+    —
+  </span>
+</div>
+
+    </div>
+
+    <div class="nav">
+      <a class="tab" href="./index.html">月報</a>
+      <a class="tab active" href="./page2.html">法人活動</a>
+      <a class="tab" href="./view.html">閲覧</a>
+      <a class="tab" href="./print.html" target="_blank" rel="noopener">PDF印刷</a>
+
+      <button class="btn small" id="prevMonth" title="前月">◀</button>
+      <button class="btn small" id="nextMonth" title="次月">▶</button>
+
+      <button class="btn small" id="exportJson" title="JSONで保存">JSON出力</button>
+      <button class="btn small" id="importJsonBtn" title="JSONを取り込み">JSON取込</button>
+      <input id="jsonFile" type="file" accept="application/json" style="display:none;"/>
+
+      <div class="chip">
+        <span id="periodLabel">—</span>
+        <span id="saveStatus" style="opacity:.9;">未保存</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="summaryBox month">
+        <div class="cap">当月サマリー</div>
+        <div class="kpiGrid">
+          <div class="mini"><div class="t">法人来場（提携合計）</div><div class="v" id="s_cv">0</div></div>
+          <div class="mini"><div class="t">法人契約（提携合計）</div><div class="v" id="s_cc">0</div></div>
+          <div class="mini"><div class="t">PR費用 合計</div><div class="v" id="s_cost">0</div></div>
+          <div class="mini"><div class="t">来場CPA（合計）</div><div class="v" id="s_cpa">0.0</div></div>
+          <div class="mini"><div class="t">契約単価（合計）</div><div class="v" id="s_cpp">0.0</div></div>
+        </div>
+      </div>
+
+      <div class="summaryBox cum" style="margin-top:12px;">
+        <div class="cap">累計（〜当月）</div>
+        <div class="kpiGrid">
+          <div class="mini"><div class="t">法人来場（累計）</div><div class="v" id="c_cv">0</div></div>
+          <div class="mini"><div class="t">法人契約（累計）</div><div class="v" id="c_cc">0</div></div>
+          <div class="mini"><div class="t">PR費用（累計）</div><div class="v" id="c_cost">0</div></div>
+          <div class="mini"><div class="t">来場CPA（累計）</div><div class="v" id="c_cpa">0.0</div></div>
+          <div class="mini"><div class="t">契約単価（累計）</div><div class="v" id="c_cpp">0.0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h3 style="margin:0;">現提携（活動・PR・単価）</h3>
+        <div class="row">
+          <button class="btn primary" id="addPartner">行追加</button>
+        </div>
+      </div>
+
+      <div class="tbl" style="margin-top:10px;">
+        <table>
+          <!-- ★備考削除：8列 / 100%に厳密フィット -->
+          <colgroup>
+            <col style="width:30%;"> <!-- 企業名 -->
+            <col style="width:8%;">  <!-- 来場 -->
+            <col style="width:8%;">  <!-- 契約 -->
+            <col style="width:27%;"> <!-- PR内容 -->
+            <col style="width:9%;">  <!-- 費用 -->
+            <col style="width:9%;">  <!-- 特典額 -->
+            <col style="width:9%;">  <!-- 手数料 -->
+            <col style="width:0%;">  <!-- (不要) -->
+            <col style="width:0%;">  <!-- (不要) -->
+          </colgroup>
+
+          <thead>
+            <tr>
+              <th>企業名</th>
+              <th>来場</th>
+              <th>契約</th>
+              <th>PR内容</th>
+              <th>費用</th>
+              <th>特典額</th>
+              <th>手数料</th>
+              <th style="width:3%;"></th> <!-- 削除 -->
+            </tr>
+          </thead>
+          <tbody id="partnerBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h3 style="margin:0;">法人業務提携（予定・交渉中）</h3>
+        <div class="row">
+          <button class="btn primary" id="addPlanned">行追加</button>
+        </div>
+      </div>
+
+      <div class="tbl" style="margin-top:10px;">
+        <table>
+          <colgroup>
+            <col style="width:28%;"> <!-- 企業名 -->
+            <col style="width:18%;"> <!-- 企業規模 -->
+            <col style="width:48%;"> <!-- 提案内容 -->
+            <col style="width:6%;">  <!-- 予定時期 -->
+          </colgroup>
+
+          <thead>
+            <tr>
+              <th>企業名</th>
+              <th>企業規模</th>
+              <th>提案内容</th>
+              <th>予定時期</th>
+              <th style="width:3%;"></th>
+            </tr>
+          </thead>
+          <tbody id="plannedBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./common.js"></script>
+<script>
+  const $ = (id)=>document.getElementById(id);
+  const nf = new Intl.NumberFormat("ja-JP");
+
+  const TRASH_SVG = `
+    <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 3h6m-8 4h10m-1 0-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7m4 4v8m4-8v8"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  `;
+
+
+let state = null;
+const DEFAULT_SRC = "./datalatest.json";
+
+function propagateSrcToNav(){
+  const qs2 = new URLSearchParams(location.search);
+  if(!qs2.has("src")) return;
+  const src2 = qs2.get("src");
+  const v2 = qs2.get("v");
+  document.querySelectorAll(".nav a.tab").forEach(a=>{
+    const href = a.getAttribute("href");
+    if(!href) return;
+    const u = new URL(href, location.href);
+    u.searchParams.set("src", src2);
+    if(v2) u.searchParams.set("v", v2);
+    a.href = u.toString();
+  });
+}
+
+async function loadInitialState(){
+  const qs2 = new URLSearchParams(location.search);
+  const src2 = qs2.get("src");
+  const hasLocal = (typeof STORAGE_KEY !== "undefined") && localStorage.getItem(STORAGE_KEY);
+  const target = src2 || (hasLocal ? null : DEFAULT_SRC);
+
+  let s;
+  if(target){
+    try{
+      const res = await fetch(target, { cache: "no-store" });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      s = deepMerge(DEFAULT_STATE, raw);
+    }catch(err){
+      console.error(err);
+      s = loadState();
+    }
+  }else{
+    s = loadState();
+  }
+
+  s.meta = s.meta || {};
+  s.archive = s.archive || {}; // { "YYYY-MM": { partners, planned, updatedAt } }
+  return s;
+}
+
+
+  function setSaveStatus(s){ $("saveStatus").textContent = s; }
+  function markDirty(){ setSaveStatus("編集中…"); }
+
+  function ymFromIsoStart(isoStart){
+    const d = isoStart ? new Date(isoStart) : new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    return `${y}-${m}`;
+  }
+
+  function normalizeMetaToMonth(isoStart){
+    const d = isoStart ? new Date(isoStart) : new Date();
+    const se = monthStartEnd(isNaN(d.getTime()) ? new Date() : d);
+    state.meta.periodStart = se.start;
+    state.meta.periodEnd = se.end;
+  }
+
+  function addMonths(isoStart, delta){
+    const d = isoStart ? new Date(isoStart) : new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + delta);
+    const se = monthStartEnd(d);
+    return se.start;
+  }
+
+  function defaultPartner(){
+    // 備考(note)は互換で残してOKだが、UIでは使わない
+    return { name:"", property:"", visit:0, first:0, apply:0, contract:0, pr:"", cost:0, benefit:0, fee:0, note:"" };
+  }
+  function defaultPlanned(){
+    return { name:"", companySize:"", proposal:"", status:"", nextAction:"", schedule:"" };
+  }
+
+  let currentYM = "";
+
+  function ensureMonthData(){
+    if(!state.meta.periodStart){
+      normalizeMetaToMonth(new Date().toISOString().slice(0,10));
+    }else{
+      normalizeMetaToMonth(state.meta.periodStart);
+    }
+
+    currentYM = ymFromIsoStart(state.meta.periodStart);
+    state.archive = state.archive || {};
+    const arc = state.archive[currentYM];
+
+    if(arc && (arc.partners || arc.planned)){
+      state.partners = Array.isArray(arc.partners) ? arc.partners : [defaultPartner()];
+      state.planned  = Array.isArray(arc.planned)  ? arc.planned  : [defaultPlanned()];
+    }else{
+      if(!Array.isArray(state.partners) || state.partners.length===0) state.partners=[defaultPartner()];
+      if(!Array.isArray(state.planned)  || state.planned.length===0)  state.planned=[defaultPlanned()];
+      persistMonth();
+    }
+
+    if(state.partners.length===0) state.partners=[defaultPartner()];
+    if(state.planned.length===0)  state.planned=[defaultPlanned()];
+  }
+
+  function persistMonth(){
+    const clone = (obj) => (window.structuredClone ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)));
+    state.archive = state.archive || {};
+    state.archive[currentYM] = {
+      partners: clone(state.partners || []),
+      planned:  clone(state.planned  || []),
+      updatedAt: new Date().toISOString()
+    };
+    saveState(state);
+  }
+
+  function sumPartners(partners){
+    const totalCost = (partners||[]).reduce((s,p)=> s + clamp0(p && p.cost), 0);
+    const totalVisit = (partners||[]).reduce((s,p)=> s + clamp0(p && p.visit), 0);
+    const totalContract = (partners||[]).reduce((s,p)=> s + clamp0(p && p.contract), 0);
+    const visitCpa = totalVisit > 0 ? totalCost / totalVisit : 0;
+    const contractUnit = totalContract > 0 ? totalCost / totalContract : 0;
+    return { totalCost, totalVisit, totalContract, visitCpa, contractUnit };
+  }
+
+  function computeCumulative(uptoYM){
+    const keys = Object.keys(state.archive || {}).filter(k => k <= uptoYM).sort();
+    let cost=0, visit=0, contract=0;
+
+    keys.forEach(k=>{
+      const partners = (state.archive[k] && state.archive[k].partners) ? state.archive[k].partners : [];
+      const s = sumPartners(partners);
+      cost += s.totalCost;
+      visit += s.totalVisit;
+      contract += s.totalContract;
+    });
+
+    return {
+      cost, visit, contract,
+      visitCpa: visit>0 ? cost/visit : 0,
+      contractUnit: contract>0 ? cost/contract : 0
+    };
+  }
+
+  function computeSummary(){
+    const m = sumPartners(state.partners || []);
+    $("s_cv").textContent   = nf.format(m.totalVisit);
+    $("s_cc").textContent   = nf.format(m.totalContract);
+    $("s_cost").textContent = nf.format(m.totalCost);
+    $("s_cpa").textContent  = m.visitCpa.toFixed(1);
+    $("s_cpp").textContent  = m.contractUnit.toFixed(1);
+
+    const c = computeCumulative(currentYM);
+    $("c_cv").textContent   = nf.format(c.visit);
+    $("c_cc").textContent   = nf.format(c.contract);
+    $("c_cost").textContent = nf.format(c.cost);
+    $("c_cpa").textContent  = c.visitCpa.toFixed(1);
+    $("c_cpp").textContent  = c.contractUnit.toFixed(1);
+  }
+
+  function render(){
+  const ym = derivePeriodLabel(state.meta.periodStart); // "2025.12" の想定
+  $("periodLabel").textContent = ym;
+
+  // 左側に「2025年12月」表記で表示
+  const parts = String(ym).split(".");
+  if(parts.length === 2){
+    $("monthLabel").textContent = `${parts[0]}年${parts[1]}月`;
+  }else{
+    $("monthLabel").textContent = ym;
+  }
+
+  renderPartners();
+  renderPlanned();
+  computeSummary();
+}
+
+
+  function renderPartners(){
+    const tbody = $("partnerBody");
+    tbody.innerHTML = "";
+
+    (state.partners || []).forEach((p, idx)=>{
+      p = p || {};
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input data-k="name" value="${escapeHtml(p.name||"")}"></td>
+        <td><input type="number" data-k="visit" value="${clamp0(p.visit)}" min="0"></td>
+        <td><input type="number" data-k="contract" value="${clamp0(p.contract)}" min="0"></td>
+        <td><input data-k="pr" value="${escapeHtml(p.pr||"")}"></td>
+        <td><input type="number" data-k="cost" value="${clamp0(p.cost)}" min="0"></td>
+        <td><input type="number" data-k="benefit" value="${clamp0(p.benefit)}" min="0"></td>
+        <td><input type="number" data-k="fee" value="${clamp0(p.fee)}" min="0"></td>
+        <td>
+          <button class="iconbtn" data-del="${idx}" aria-label="削除" title="削除">${TRASH_SVG}</button>
+        </td>
+      `;
+
+      tr.querySelectorAll("input").forEach(inp=>{
+        inp.addEventListener("input", ()=>{
+          markDirty();
+          const k = inp.getAttribute("data-k");
+          const v = inp.type === "number" ? clamp0(inp.value) : inp.value;
+          state.partners[idx][k] = v;
+
+          persistMonth();
+          setSaveStatus("保存済み");
+          computeSummary();
+        });
+      });
+
+      tr.querySelector("[data-del]").addEventListener("click", ()=>{
+        markDirty();
+        state.partners.splice(idx, 1);
+        if(state.partners.length === 0) state.partners.push(defaultPartner());
+
+        persistMonth();
+        setSaveStatus("保存済み");
+        render();
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderPlanned(){
+    const tbody = $("plannedBody");
+    tbody.innerHTML = "";
+
+    (state.planned || []).forEach((p, idx)=>{
+      p = p || {};
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input data-k="name" value="${escapeHtml(p.name||"")}"></td>
+        <td><input data-k="companySize" value="${escapeHtml(p.companySize||"")}"></td>
+        <td><input data-k="proposal" value="${escapeHtml(p.proposal||"")}"></td>
+        <td><input data-k="schedule" value="${escapeHtml(p.schedule||"")}"></td>
+        <td>
+          <button class="iconbtn" data-delp="${idx}" aria-label="削除" title="削除">${TRASH_SVG}</button>
+        </td>
+      `;
+
+      tr.querySelectorAll("input").forEach(inp=>{
+        inp.addEventListener("input", ()=>{
+          markDirty();
+          const k = inp.getAttribute("data-k");
+          state.planned[idx][k] = inp.value;
+
+          persistMonth();
+          setSaveStatus("保存済み");
+        });
+      });
+
+      tr.querySelector("[data-delp]").addEventListener("click", ()=>{
+        markDirty();
+        state.planned.splice(idx, 1);
+        if(state.planned.length === 0) state.planned.push(defaultPlanned());
+
+        persistMonth();
+        setSaveStatus("保存済み");
+        render();
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  /* --- JSON export/import --- */
+  function downloadJson(obj){
+    const name = `hb_report_backup_${currentYM}_${new Date().toISOString().slice(0,10)}.json`;
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function normalizeImportedState(obj){
+    if(!obj || typeof obj !== "object") throw new Error("JSON形式が不正です。");
+    const base = (typeof DEFAULT_STATE !== "undefined")
+      ? (window.structuredClone ? structuredClone(DEFAULT_STATE) : JSON.parse(JSON.stringify(DEFAULT_STATE)))
+      : loadState();
+
+    const merged = (typeof deepMerge === "function") ? deepMerge(base, obj) : Object.assign(base, obj);
+
+    merged.partners = Array.isArray(obj.partners) && obj.partners.length ? obj.partners : (base.partners || [defaultPartner()]);
+    merged.planned  = Array.isArray(obj.planned)  && obj.planned.length  ? obj.planned  : (base.planned  || [defaultPlanned()]);
+    merged.archive  = (obj.archive && typeof obj.archive === "object") ? obj.archive : (merged.archive || {});
+
+    merged.meta = merged.meta || {};
+    if(!merged.meta.periodStart){
+      const today = new Date().toISOString().slice(0,10);
+      const se = monthStartEnd(new Date(today));
+      merged.meta.periodStart = se.start;
+      merged.meta.periodEnd = se.end;
+    }else{
+      const d = new Date(merged.meta.periodStart);
+      const se = monthStartEnd(isNaN(d.getTime()) ? new Date() : d);
+      merged.meta.periodStart = se.start;
+      merged.meta.periodEnd = se.end;
+    }
+    return merged;
+  }
+
+  window.addEventListener("load", async ()=>{
+    propagateSrcToNav();
+    state = await loadInitialState();
+    ensureMonthData();
+    render();
+    setSaveStatus("保存済み");
+
+    $("addPartner").addEventListener("click", ()=>{
+      markDirty();
+      state.partners.push(defaultPartner());
+      persistMonth();
+      setSaveStatus("保存済み");
+      renderPartners();
+      computeSummary();
+    });
+
+    $("addPlanned").addEventListener("click", ()=>{
+      markDirty();
+      state.planned.push(defaultPlanned());
+      persistMonth();
+      setSaveStatus("保存済み");
+      renderPlanned();
+    });
+
+    $("prevMonth").addEventListener("click", ()=>{
+      markDirty();
+      persistMonth();
+      state.meta.periodStart = addMonths(state.meta.periodStart, -1);
+      normalizeMetaToMonth(state.meta.periodStart);
+      saveState(state);
+      state = loadState();
+      state.archive = state.archive || {};
+      ensureMonthData();
+      render();
+      setSaveStatus("保存済み");
+    });
+
+    $("nextMonth").addEventListener("click", ()=>{
+      markDirty();
+      persistMonth();
+      state.meta.periodStart = addMonths(state.meta.periodStart, +1);
+      normalizeMetaToMonth(state.meta.periodStart);
+      saveState(state);
+      state = loadState();
+      state.archive = state.archive || {};
+      ensureMonthData();
+      render();
+      setSaveStatus("保存済み");
+    });
+
+    $("exportJson").addEventListener("click", ()=>{
+      persistMonth();
+      setSaveStatus("保存済み");
+      downloadJson(state);
+    });
+
+    $("importJsonBtn").addEventListener("click", ()=>{
+      $("jsonFile").value = "";
+      $("jsonFile").click();
+    });
+
+    $("jsonFile").addEventListener("change", async (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+
+      const ok = confirm("現在のデータを上書きします。よろしいですか？");
+      if(!ok) return;
+
+      try{
+        const txt = await file.text();
+        const obj = JSON.parse(txt);
+        const imported = normalizeImportedState(obj);
+        saveState(imported);
+
+        state = loadState();
+        state.archive = state.archive || {};
+        ensureMonthData();
+        render();
+        setSaveStatus("保存済み");
+        alert("JSON取込が完了しました。");
+      }catch(err){
+        console.error(err);
+        alert("JSON取込に失敗しました。ファイル内容をご確認ください。");
+      }
+    });
+  });
+</script>
+</body>
+</html>

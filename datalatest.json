@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "periodStart": "2025-12-01",
+    "periodEnd": "2025-12-31"
+  },
+  "counts": {
+    "partnerCompanies": 9,
+    "targetCompanies": 1856
+  },
+  "perf": {
+    "totalVisit": 85,
+    "totalContract": 4,
+    "corpVisit": 7,
+    "corpContract": 3,
+    "referralCards": 3
+  },
+  "lastYear": {
+    "totalVisit": 91,
+    "totalContract": 3,
+    "corpVisit": 8,
+    "corpContract": 2,
+    "referralCards": 0
+  },
+  "nextMonthPast": {
+    "totalVisit": 234,
+    "totalContract": 23,
+    "corpVisit": 16,
+    "corpContract": 3,
+    "referralCards": 0
+  },
+  "nextTarget": {
+    "totalVisit": 243,
+    "totalContract": 30,
+    "corpVisit": 18,
+    "corpContract": 4,
+    "referralCards": 0
+  },
+  "partners": [
+    {
+      "name": "ベルス",
+      "property": "LP新松戸",
+      "visit": 2,
+      "contract": 0,
+      "first": 1,
+      "apply": 0
+    },
+    {
+      "name": "ライジングサポート",
+      "property": "LP光が丘Ⅲ",
+      "visit": 3,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "日立",
+      "property": "LP瑞江Ⅹ",
+      "visit": 1,
+      "contract": 1,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "ホンダ開発",
+      "property": "LP",
+      "visit": 2,
+      "contract": 0,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "リロクラブ",
+      "property": "LP",
+      "visit": 5,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    }
+  ],
+  "topics": "",
+  "planned": [
+    {
+      "name": "",
+      "companySize": "",
+      "proposal": "",
+      "status": "",
+      "nextAction": "",
+      "schedule": ""
+    },
+    {
+      "name": "",
+      "companySize": "",
+      "proposal": "",
+      "status": "",
+      "nextAction": "",
+      "schedule": ""
+    },
+    {
+      "name": "",
+      "companySize": "",
+      "proposal": "",
+      "status": "",
+      "nextAction": "",
+      "schedule": ""
+    }
+  ],
+  "archive": {
+    "2025-12": {
+      "partners": [
+        {
+          "name": "",
+          "property": "",
+          "visit": 2,
+          "first": 0,
+          "apply": 0,
+          "note": "",
+          "contract": 3,
+          "cost": 3000
+        },
+        {
+          "name": "",
+          "property": "",
+          "visit": 3,
+          "first": 0,
+          "apply": 0,
+          "contract": 2,
+          "pr": "",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        }
+      ],
+      "planned": [
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        },
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        },
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        }
+      ],
+      "updatedAt": "2025-12-27T15:29:32.679Z"
+    },
+    "2026-01": {
+      "partners": [
+        {
+          "name": "",
+          "property": "",
+          "visit": 1,
+          "first": 0,
+          "apply": 0,
+          "note": "",
+          "contract": 1,
+          "cost": 1
+        },
+        {
+          "name": "",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        }
+      ],
+      "planned": [
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        },
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        },
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        }
+      ],
+      "updatedAt": "2025-12-27T15:15:07.358Z"
+    }
+  }
+}
