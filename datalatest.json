@@ -1,0 +1,487 @@
+{
+  "meta": {
+    "periodStart": "2025-12-01",
+    "periodEnd": "2025-12-31"
+  },
+  "counts": {
+    "partnerCompanies": 9,
+    "targetCompanies": 1956
+  },
+  "perf": {
+    "totalVisit": 85,
+    "totalContract": 4,
+    "corpVisit": 5,
+    "corpContract": 1,
+    "referralCards": 3
+  },
+  "lastYear": {
+    "totalVisit": 72,
+    "totalContract": 12,
+    "corpVisit": 6,
+    "corpContract": 0,
+    "referralCards": 0
+  },
+  "nextMonthPast": {
+    "totalVisit": 148,
+    "totalContract": 26,
+    "corpVisit": 9,
+    "corpContract": 2,
+    "referralCards": 0
+  },
+  "nextTarget": {
+    "totalVisit": 150,
+    "totalContract": 30,
+    "corpVisit": 10,
+    "corpContract": 3,
+    "referralCards": 4
+  },
+  "partners": [
+    {
+      "name": "ライジングサポート",
+      "property": "",
+      "visit": 1,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "日立リアルエステートパートナーズ",
+      "property": "",
+      "visit": 1,
+      "contract": 1,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "ホンダ開発",
+      "property": "",
+      "visit": 1,
+      "contract": 0,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "ベルス",
+      "property": "",
+      "visit": 2,
+      "contract": 0,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "アクセンチュア",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "KDDI共済会",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "NEC",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "東京海上日動ファシリティーズ",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "パナソニック共済会",
+      "property": "",
+      "visit": 0,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    }
+  ],
+  "reportPartners": [
+    {
+      "name": "ライジングサポート",
+      "property": "LP光が丘Ⅲ",
+      "visit": 1,
+      "contract": 0,
+      "first": 0,
+      "apply": 0
+    },
+    {
+      "name": "日立リアルエステートパートナーズ",
+      "property": "LP瑞江Ⅹ",
+      "visit": 1,
+      "contract": 1,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "ホンダ開発",
+      "property": "LP大宮ⅩⅣ",
+      "visit": 1,
+      "contract": 0,
+      "first": 0,
+      "apply": 1
+    },
+    {
+      "name": "ベルス",
+      "property": "LP浦和神明、LP新松戸",
+      "visit": 2,
+      "contract": 0,
+      "first": 0,
+      "apply": 1
+    }
+  ],
+  "reportPartnersYM": "2025-12",
+  "topics": "",
+  "planned": [
+    {
+      "name": "リロクラブ",
+      "companySize": "1,250万人",
+      "proposal": "会員数最大の福利厚生サイトを運用。㏚方法も豊富",
+      "status": "",
+      "nextAction": "",
+      "schedule": "１月"
+    },
+    {
+      "name": "キヤノン",
+      "companySize": "17万人",
+      "proposal": "社員層は世帯年収が安定→与信が強く、成約までが速い傾向",
+      "status": "",
+      "nextAction": "",
+      "schedule": "２月"
+    },
+    {
+      "name": "NTT　ExCパートナー",
+      "companySize": "34万人",
+      "proposal": "都心ど真ん中勤務地なので埼玉・城北・城東・城西へ分散㏚可能",
+      "status": "",
+      "nextAction": "",
+      "schedule": "１月"
+    },
+    {
+      "name": "ブリヂストン",
+      "companySize": "12.5万人",
+      "proposal": "工場拠点各所。家族持ち比率が高く戸建ニーズが濃い",
+      "status": "",
+      "nextAction": "",
+      "schedule": "２月"
+    },
+    {
+      "name": "SBアットワークス",
+      "companySize": "6.7万人",
+      "proposal": "浜松町勤務＝城南も埼玉も射程。オンライン㏚に強い",
+      "status": "",
+      "nextAction": "",
+      "schedule": "２月"
+    },
+    {
+      "name": "東京都医師協同連合",
+      "companySize": "2,800人",
+      "proposal": "医師層は単価が高く、紹介が強い。主勤務地＝宝町、京橋",
+      "status": "",
+      "nextAction": "",
+      "schedule": "１月"
+    },
+    {
+      "name": "三菱電機ライフサービス",
+      "companySize": "15万人",
+      "proposal": "購買力が高く成約単価が上がりやすい。勤務地最寄り＝浜松町、大門、芝公園",
+      "status": "",
+      "nextAction": "",
+      "schedule": "２月"
+    },
+    {
+      "name": "住商レジデンシャル",
+      "companySize": "8.3万人",
+      "proposal": "拠点が複数“エリア別訴求”がやりやすい。本社：小川町、御茶ノ水",
+      "status": "",
+      "nextAction": "",
+      "schedule": "２月"
+    }
+  ],
+  "reportArchive": {
+    "2025-12": {
+      "partners": [
+        {
+          "name": "ライジングサポート",
+          "property": "",
+          "visit": 1,
+          "contract": 0,
+          "first": 0,
+          "apply": 0
+        },
+        {
+          "name": "日立リアルエステートパートナーズ",
+          "property": "",
+          "visit": 0,
+          "contract": 0,
+          "first": 0,
+          "apply": 0
+        },
+        {
+          "name": "ホンダ開発",
+          "property": "",
+          "visit": 0,
+          "contract": 0,
+          "first": 0,
+          "apply": 0
+        },
+        {
+          "name": "ベルス",
+          "property": "",
+          "visit": 0,
+          "contract": 0,
+          "first": 0,
+          "apply": 0
+        },
+        {
+          "name": "アクセンチュア",
+          "property": "",
+          "visit": 0,
+          "contract": 0,
+          "first": 0,
+          "apply": 0
+        }
+      ],
+      "updatedAt": "2025-12-28T02:42:15.648Z"
+    }
+  },
+  "archive": {
+    "2025-12": {
+      "partners": [
+        {
+          "name": "ライジングサポート",
+          "property": "",
+          "visit": 1,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "社内イントラサイト掲載中、１月メルマガ予定",
+          "cost": 9167,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "日立リアルエステートパートナーズ",
+          "property": "",
+          "visit": 1,
+          "first": 0,
+          "apply": 1,
+          "contract": 1,
+          "pr": "戸建特集ページ",
+          "cost": 0,
+          "benefit": 449500,
+          "fee": 481882,
+          "note": ""
+        },
+        {
+          "name": "ホンダ開発",
+          "property": "",
+          "visit": 1,
+          "first": 0,
+          "apply": 1,
+          "contract": 0,
+          "pr": "社内イントラサイト掲載中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "ベルス",
+          "property": "",
+          "visit": 2,
+          "first": 0,
+          "apply": 1,
+          "contract": 0,
+          "pr": "社内イントラサイト掲載中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "アクセンチュア",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "社内イントラサイト掲載中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "KDDI共済会",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "社内イントラサイト掲載中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "NEC",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "社内イントラサイト掲載中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "東京海上日動ファシリティーズ",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "準備中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        },
+        {
+          "name": "パナソニック共済会",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "準備中",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        }
+      ],
+      "planned": [
+        {
+          "name": "リロクラブ",
+          "companySize": "1,250万人",
+          "proposal": "会員数最大の福利厚生サイトを運用。㏚方法も豊富",
+          "status": "",
+          "nextAction": "",
+          "schedule": "１月"
+        },
+        {
+          "name": "キヤノン",
+          "companySize": "17万人",
+          "proposal": "社員層は世帯年収が安定→与信が強く、成約までが速い傾向",
+          "status": "",
+          "nextAction": "",
+          "schedule": "２月"
+        },
+        {
+          "name": "NTT　ExCパートナー",
+          "companySize": "34万人",
+          "proposal": "都心ど真ん中勤務地なので埼玉・城北・城東・城西へ分散㏚可能",
+          "status": "",
+          "nextAction": "",
+          "schedule": "１月"
+        },
+        {
+          "name": "ブリヂストン",
+          "companySize": "12.5万人",
+          "proposal": "工場拠点各所。家族持ち比率が高く戸建ニーズが濃い",
+          "status": "",
+          "nextAction": "",
+          "schedule": "２月"
+        },
+        {
+          "name": "SBアットワークス",
+          "companySize": "6.7万人",
+          "proposal": "浜松町勤務＝城南も埼玉も射程。オンライン㏚に強い",
+          "status": "",
+          "nextAction": "",
+          "schedule": "２月"
+        },
+        {
+          "name": "東京都医師協同連合",
+          "companySize": "2,800人",
+          "proposal": "医師層は単価が高く、紹介が強い。主勤務地＝宝町、京橋",
+          "status": "",
+          "nextAction": "",
+          "schedule": "１月"
+        },
+        {
+          "name": "三菱電機ライフサービス",
+          "companySize": "15万人",
+          "proposal": "購買力が高く成約単価が上がりやすい。勤務地最寄り＝浜松町、大門、芝公園",
+          "status": "",
+          "nextAction": "",
+          "schedule": "２月"
+        },
+        {
+          "name": "住商レジデンシャル",
+          "companySize": "8.3万人",
+          "proposal": "拠点が複数“エリア別訴求”がやりやすい。本社：小川町、御茶ノ水",
+          "status": "",
+          "nextAction": "",
+          "schedule": "２月"
+        }
+      ],
+      "perf": {
+        "corpVisit": 5,
+        "corpContract": 1
+      },
+      "updatedAt": "2025-12-28T04:45:23.674Z"
+    },
+    "2026-01": {
+      "partners": [
+        {
+          "name": "",
+          "property": "",
+          "visit": 0,
+          "first": 0,
+          "apply": 0,
+          "contract": 0,
+          "pr": "",
+          "cost": 0,
+          "benefit": 0,
+          "fee": 0,
+          "note": ""
+        }
+      ],
+      "planned": [
+        {
+          "name": "",
+          "companySize": "",
+          "proposal": "",
+          "status": "",
+          "nextAction": "",
+          "schedule": ""
+        }
+      ],
+      "perf": {
+        "corpVisit": 0,
+        "corpContract": 0
+      },
+      "updatedAt": "2025-12-28T02:18:26.496Z"
+    }
+  }
+}
