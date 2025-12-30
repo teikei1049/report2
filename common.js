@@ -48,7 +48,6 @@ function deepMerge(base, patch){
 }
 
 function loadState(){
-  // v2が残ってたら拾ってマージしたい場合はここで読んで移行もできる
   const raw = localStorage.getItem(STORAGE_KEY);
   if(!raw) return clone(DEFAULT_STATE);
   try{
@@ -113,4 +112,21 @@ function resetState(){
   const s = clone(DEFAULT_STATE);
   saveState(s);
   return s;
+}
+
+/* =========================================================
+   公開用（閲覧専用）JSON ロード
+   - GitHub Pages 用
+   - localStorage には一切書かない
+   ========================================================= */
+async function loadPublicState(jsonPath = "./datalatest.json"){
+  try{
+    const res = await fetch(jsonPath, { cache: "no-store" });
+    if(!res.ok) throw new Error("JSON fetch failed");
+    const data = await res.json();
+    return deepMerge(DEFAULT_STATE, data);
+  }catch(e){
+    console.warn("Public JSON not found. Fallback to localStorage.", e);
+    return loadState(); // 保険
+  }
 }
