@@ -358,7 +358,7 @@
     </svg>
   `;
 
-  let state;
+  let state = loadState();
   state.meta = state.meta || {};
   state.archive = state.archive || {}; // { "YYYY-MM": { partners, planned, updatedAt } }
 
@@ -706,19 +706,19 @@ function sumPartners(partners){
   }
 
   window.addEventListener("load", ()=>{
-  loadPublicState().then(s => {
-    state = s;
-    state.meta = state.meta || {};
-    state.archive = state.archive || {};
-
     ensureMonthData();
+    syncFromIndexReportPartners();
     render();
+    setSaveStatus("保存済み");
 
-    // 閲覧用なので保存表示は消す
-    setSaveStatus("");
-  });
-});
-
+    $("addPartner").addEventListener("click", ()=>{
+      markDirty();
+      state.partners.push(defaultPartner());
+      persistMonth();
+      setSaveStatus("保存済み");
+      renderPartners();
+      computeSummary();
+    });
 
     $("addPlanned").addEventListener("click", ()=>{
       markDirty();

@@ -1116,9 +1116,7 @@
     }
   }
 
-  loadPublicState().then(state => {
-  render(state);
-});
+  let state = loadState();
 
   // ===================== Utilities =====================
   const $ = (id) => document.getElementById(id);
